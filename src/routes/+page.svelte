@@ -2,5 +2,5 @@
     import Reviews from "../lib/Reviews.svelte";
 </script>
 
-<h1>Hello world</h1>
+<h1>Dem tingz yeee mandem</h1>
 <Reviews />
