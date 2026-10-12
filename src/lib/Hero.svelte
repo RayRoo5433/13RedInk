@@ -20,14 +20,17 @@
     /* stop the wide reviews strip from stretching the column (and pushing the h1 off-screen) */
     grid-template-columns: minmax(0, 1fr);
     height: 95vh;
+    overflow: hidden;
 
     img {
-      /* out of the grid flow so it can't stretch the rows; natural aspect ratio */
+      /* out of the grid flow so it can't stretch the rows */
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
-      height: auto;
+      height: 100%;
+      /* full width on wide screens; on tall/mobile screens scale up to fill the height instead, cropping the sides evenly */
+      object-fit: cover;
+      object-position: center;
       z-index: 0;
     }
 
@@ -35,7 +38,7 @@
       grid-area: 1 / 1;
       place-self: center;
       margin: 0;
-      z-index: 100;
+      z-index: 80;
     }
 
     .reviews {

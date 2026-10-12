@@ -20,7 +20,6 @@
   div#about {
     position: relative;
     min-height: 100vh;
-    background-color: purple;
     display: flex;
     /* columns stack once there's no room for both side by side */
     flex-wrap: wrap;
