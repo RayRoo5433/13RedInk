@@ -2,8 +2,7 @@
   import { onMount } from "svelte";
   import { page } from "$app/state";
   import { afterNavigate, replaceState } from "$app/navigation";
-  import { gsap } from "gsap";
-  import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+  import type { gsap as GSAP } from "gsap"; // type only, erased at build time
 
   // "home" scrolls to the top of the page, the rest to their section ids
   const tabs = [
@@ -24,9 +23,15 @@
   let active = $state(activeFromUrl(page.url));
   let animating = false; // stops the observer flicking through every section mid-scroll
   let observer: IntersectionObserver | undefined;
+  let gsap: typeof GSAP | undefined; // loaded in the browser only, never during SSR
 
   onMount(() => {
-    gsap.registerPlugin(ScrollToPlugin);
+    Promise.all([import("gsap"), import("gsap/ScrollToPlugin")]).then(
+      ([{ gsap: g }, { ScrollToPlugin }]) => {
+        g.registerPlugin(ScrollToPlugin);
+        gsap = g;
+      },
+    );
     return () => observer?.disconnect();
   });
 
@@ -51,8 +56,8 @@
   });
 
   const handleNavigation = (e: MouseEvent, id: string) => {
-    // On other pages let SvelteKit navigate to /#id normally
-    if (page.url.pathname !== "/") return;
+    // On other pages, or before GSAP has loaded, let SvelteKit navigate to /#id normally
+    if (page.url.pathname !== "/" || !gsap) return;
     e.preventDefault();
 
     const reduceMotion = window.matchMedia(
