@@ -41,7 +41,6 @@
 <style>
   #artists {
     position: relative;
-    background-color: white;
     display: flex;
     flex-flow: column;
     --gutter: clamp(1rem, 8vw, 10rem);

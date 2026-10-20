@@ -37,7 +37,7 @@
         <h2>{card.name}</h2>
         <p class="price">{card.price} <small>{card.unit}</small></p>
         <p>{card.blurb}</p>
-        <a href="#contact">Book</a>
+        <a href="/contact">Book</a>
       </div>
     {/each}
   </div>
