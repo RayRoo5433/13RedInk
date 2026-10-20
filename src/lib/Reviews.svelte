@@ -59,7 +59,7 @@
     display: flex;
     width: max-content;
     gap: 1rem;
-    animation: scroll 30s linear infinite;
+    animation: scroll 60s linear infinite;
   }
 
   @keyframes scroll {
@@ -75,10 +75,9 @@
     display: flex;
     flex-direction: column;
     width: min(20rem, 80vw);
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--primary);
     border-radius: 8px;
     padding: 1rem;
-    background: #fafafa;
     flex-shrink: 0;
 
     /* cap long reviews so one essay doesn't set the height of every card */
@@ -123,7 +122,7 @@
 
       span {
         font-size: 0.75rem;
-        color: #6b7280;
+        color: var(--primary);
       }
     }
   }

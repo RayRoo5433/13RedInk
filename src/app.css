@@ -1,12 +1,29 @@
+/* Site colours, usable in any component as var(--name).
+   Add new colours here so they stay in one place. */
+:root {
+  --primary:  #950606; /* text, borders, accents */
+  --secondary: #afcddb ; /* background */
+}
+
 html {
-    font-size: 16px;
+  font-size: 16px;
+  color: var(--primary);
 }
 
 body {
-  background-color: #ff7463 !important;
+  background-color: var(--secondary);
   scroll-behavior: auto;
   overflow-x: hidden;
   margin: 0px;
-  padding: 2rem;
+  padding: 0rem 2rem 2rem 2rem;
   font-size: 32px;
+}
+
+/* links and form controls don't inherit the text colour by default */
+a,
+button,
+input,
+textarea,
+select {
+  color: inherit;
 }

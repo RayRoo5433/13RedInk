@@ -19,7 +19,7 @@
       : page.url.pathname.startsWith(href);
 </script>
 
-<container>
+<header>
   <nav>
     <Logo />
     {#each tabs as tab}
@@ -33,17 +33,20 @@
     <Button href="/contact">Get a Consulation</Button>
   </nav>
   <hr />
-</container>
+</header>
 
 {@render children()}
 
 <style>
-  /* container { */
-  /*   padding: 2rem; */
-  /* } */
+  header {
+    position: sticky;
+    top: 0px;
+    padding-top: 1rem;
+    z-index: 100;
+    background-color: var(--secondary);
+  }
 
   nav {
-    position: sticky;
     top: 0px;
     z-index: 100;
     display: flex;
@@ -56,8 +59,7 @@
 
     a {
       text-decoration: none;
-      color: #000;
-      mix-blend-mode: overlay;
+      color: var(--primary);
     }
 
     a.active {
@@ -71,6 +73,6 @@
     margin: 0.5em auto;
     padding: 0;
     border: none;
-    border-top: 1px solid black;
+    border-top: 1px solid var(--primary);
   }
 </style>

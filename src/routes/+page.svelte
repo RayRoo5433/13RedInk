@@ -5,7 +5,6 @@
 </script>
 
 <div id="hero">
-  <img src="/banner.jpg" alt="" />
   <h1>RED 13 INK</h1>
   <div class="reviews">
     <Reviews />
@@ -47,7 +46,6 @@
       position: relative;
       padding: 1em;
       /* temporary just grey boxing */
-      background-color: white;
       z-index: 1;
     }
   }
