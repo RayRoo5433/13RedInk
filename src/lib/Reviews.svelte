@@ -23,7 +23,7 @@
   <container>
     {#each items as item}
       <card>
-        <Rating score={item.rating} />
+        <Rating score={5} />
         <p>{item.text}</p>
         <section>
           <img src={item.photo} alt="smthn" />
@@ -47,7 +47,7 @@
   }
 
   wrapper {
-    overflow: hidden;
+    /* overflow: hidden; */
     width: 100%;
   }
 
@@ -60,6 +60,8 @@
     width: max-content;
     gap: 1rem;
     animation: scroll 60s linear infinite;
+    border-top: 1px solid var(--primary);
+    padding-top: 2rem;
   }
 
   @keyframes scroll {
@@ -72,13 +74,17 @@
   }
 
   card {
+    position: relative;
     display: flex;
     flex-direction: column;
     width: min(20rem, 80vw);
+    background-color: var(--secondary);
     border: 1px solid var(--primary);
     border-radius: 8px;
     padding: 1rem;
     flex-shrink: 0;
+    transition: 0.2s ease-in-out;
+    z-index: 1;
 
     /* cap long reviews so one essay doesn't set the height of every card */
     p {
@@ -87,8 +93,8 @@
       margin: 0.25rem 0;
       display: -webkit-box;
       -webkit-box-orient: vertical;
-      -webkit-line-clamp: 4;
-      line-clamp: 4;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
       overflow: hidden;
     }
 
@@ -125,5 +131,42 @@
         color: var(--primary);
       }
     }
+  }
+
+  card:hover {
+    transform: scale(1.03) translate(0rem, -1rem);
+  }
+
+  card::before {
+    content: "";
+    position: absolute;
+    background-color: var(--secondary);
+    border-radius: 8px;
+    z-index: 1;
+    inset: 0;
+  }
+
+  card::after {
+    content: "";
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: var(--primary);
+    border-radius: 8px;
+    transition: 0.3s ease-in-out;
+    z-index: -1;
+    opacity: 0;
+  }
+
+  card:hover::after {
+    transform: translate(0rem, 1rem) scale(0.970874);
+    opacity: 0.8;
+  }
+
+  card * {
+    position: relative;
+    z-index: 2 !important;
   }
 </style>

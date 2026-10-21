@@ -7,6 +7,7 @@
   let { children } = $props();
 
   const tabs = [
+    { name: "home", href: "/" },
     { name: "about", href: "/about" },
     { name: "artists", href: "/artists" },
     { name: "pricing", href: "/pricing" },
@@ -21,7 +22,7 @@
 
 <header>
   <nav>
-    <Logo />
+    <!-- <Logo /> -->
     {#each tabs as tab}
       <a
         href={tab.href}
@@ -35,7 +36,9 @@
   <hr />
 </header>
 
-{@render children()}
+<content>
+  {@render children()}
+</content>
 
 <style>
   header {
@@ -47,14 +50,14 @@
   }
 
   nav {
+    width: 100%;
     top: 0px;
     z-index: 100;
     display: flex;
     flex-wrap: wrap;
     min-height: 5vh;
-    justify-content: space-evenly;
+    justify-content: flex-end;
     column-gap: 1em;
-    width: 100%;
     margin: 0 auto;
 
     a {
@@ -67,12 +70,37 @@
       text-underline-offset: 0.2em;
     }
   }
-  /* one solid line; the browser default is a two-tone inset border */
   :global(hr) {
     height: 0;
     margin: 0.5em auto;
     padding: 0;
     border: none;
     border-top: 1px solid var(--primary);
+  }
+
+  content {
+    display: block;
+    height: 90vh;
+    overflow-y: scroll;
+
+    /* `&` attaches these to content's own scrollbar; a bare/:global selector
+       here would target scrollbars of elements *inside* content instead */
+    &::-webkit-scrollbar {
+      width: 10px;
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-track {
+      display: hidden;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--primary);
+      height: 20%;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
   }
 </style>

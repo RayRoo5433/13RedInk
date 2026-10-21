@@ -19,11 +19,8 @@
 <style>
   div#about {
     position: relative;
-    min-height: 100vh;
     display: flex;
-    /* columns stack once there's no room for both side by side */
     flex-wrap: wrap;
-    /* one gutter for the outer edges and between the columns */
     --gutter: clamp(1rem, 8vw, 10rem);
     gap: var(--gutter);
     padding: var(--gutter);

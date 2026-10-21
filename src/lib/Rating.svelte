@@ -1,9 +1,16 @@
 <script>
-    let { score } = $props();
+  let { score } = $props();
 </script>
 
 {#if typeof score === "boolean"}
-	<span>✓ Recommended</span>
+  <span>✓ Recommended</span>
 {:else}
-	<span>{"★".repeat(score)}</span>
+  <span>{"★".repeat(score)}</span>
 {/if}
+
+<style>
+  span {
+    position: relative;
+    z-index: 2;
+  }
+</style>

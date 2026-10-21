@@ -2,10 +2,13 @@
   // film grain can maybe be added to the image. I'm picturing a really nice Gothic Font used with Red exclusively in Red...
   import "../app.css";
   import Reviews from "../lib/Reviews.svelte";
+  import TextPressure from "../lib/TextPressure.svelte";
 </script>
 
 <div id="hero">
-  <h1>RED 13 INK</h1>
+  <div class="title">
+    <TextPressure text="RED 13 INK" />
+  </div>
   <div class="reviews">
     <Reviews />
   </div>
@@ -19,7 +22,7 @@
     grid-template-rows: minmax(0, 1fr) auto;
     /* stop the wide reviews strip from stretching the column (and pushing the h1 off-screen) */
     grid-template-columns: minmax(0, 1fr);
-    height: 95vh;
+    height: 85vh;
     overflow: hidden;
 
     img {
@@ -34,17 +37,18 @@
       z-index: 0;
     }
 
-    h1 {
+    .title {
       grid-area: 1 / 1;
-      place-self: center;
-      margin: 0;
+      align-self: center;
+      position: relative;
+      /* TextPressure sizes its font to width / 5 for 10 chars, so this box fits one line */
+      aspect-ratio: 5 / 1;
       z-index: 80;
     }
 
     .reviews {
       grid-area: 2 / 1;
       position: relative;
-      padding: 1em;
       /* temporary just grey boxing */
       z-index: 1;
     }
