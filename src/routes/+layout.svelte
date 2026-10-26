@@ -20,6 +20,10 @@
   let links = $state([]);
   // the pill measures the links, which are wrong until Graduate has loaded
   let fontReady = $state(false);
+  // small-screen menu; the inline links are hidden below the breakpoint
+  let menuOpen = $state(false);
+  /** @type {HTMLHRElement[]} */
+  let separators = $state([]);
 
   const tabs = [
     { name: "home", href: "/" },
@@ -71,7 +75,37 @@
 
   // <content> stays mounted across pages, so its scroll height changes without
   // a resize; re-measure triggers once the new page is in
-  afterNavigate(() => ScrollTrigger.refresh());
+  afterNavigate(() => {
+    menuOpen = false;
+    ScrollTrigger.refresh();
+  });
+
+  // each time the menu opens, the separators draw out from their centres one
+  // after another while the overlay wipes down
+  $effect(() => {
+    if (!menuOpen) return;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const tween = gsap.fromTo(
+      separators,
+      { scaleX: 0 },
+      {
+        scaleX: 1,
+        transformOrigin: "center",
+        duration: reduceMotion ? 0 : 0.7,
+        stagger: 0.08,
+        delay: reduceMotion ? 0 : 0.2,
+        ease: "power3.inOut",
+      },
+    );
+    return () => tween.kill();
+  });
+
+  /** @param {KeyboardEvent} event */
+  function closeOnEscape(event) {
+    if (event.key === "Escape") menuOpen = false;
+  }
 
   const activeIndex = $derived(tabs.findIndex((tab) => isActive(tab.href)));
 
@@ -127,6 +161,8 @@
   $effect(() => placePill(0.3));
 </script>
 
+<svelte:window onkeydown={closeOnEscape} />
+
 <header>
   <nav bind:this={nav}>
     <!-- <Logo /> -->
@@ -140,11 +176,36 @@
     {/each}
     <div bind:this={pill} class="pill"></div>
     <!-- transforming the button itself would put its shadow on top, so slide this instead -->
-    <div bind:this={cta}>
+    <div bind:this={cta} class="cta">
       <Button href="/contact">Get a Consulation</Button>
     </div>
+    <button
+      class="menu-toggle"
+      class:open={menuOpen}
+      onclick={() => (menuOpen = !menuOpen)}
+      aria-expanded={menuOpen}
+      aria-controls="mobile-menu"
+      aria-label={menuOpen ? "Close menu" : "Open menu"}
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </nav>
   <hr bind:this={rule} />
+  <!-- inert keeps the hidden links out of the tab order while it's closed -->
+  <div id="mobile-menu" class="mobile-menu" class:open={menuOpen} inert={!menuOpen}>
+    {#each tabs as tab, i}
+      {#if i > 0}<hr bind:this={separators[i - 1]} />{/if}
+      <a
+        href={tab.href}
+        class:active={isActive(tab.href)}
+        aria-current={isActive(tab.href) ? "page" : undefined}>{tab.name}</a
+      >
+    {/each}
+    <hr bind:this={separators[tabs.length - 1]} />
+    <Button href="/contact">Get a Consulation</Button>
+  </div>
 </header>
 
 <content>
@@ -201,6 +262,126 @@
     height: 2.5rem;
     border-bottom: 3px solid var(--primary);
     background-color: transparent;
+  }
+
+  .menu-toggle {
+    display: none;
+    position: relative;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+
+    span {
+      position: absolute;
+      left: 20%;
+      width: 60%;
+      height: 3px;
+      background-color: var(--primary);
+      transition:
+        transform 0.3s ease,
+        opacity 0.2s ease;
+    }
+    span:nth-child(1) {
+      top: calc(50% - 1.5px - 0.6rem);
+    }
+    span:nth-child(2) {
+      top: calc(50% - 1.5px);
+    }
+    span:nth-child(3) {
+      top: calc(50% - 1.5px + 0.6rem);
+    }
+
+    /* outer bars meet in the middle and cross, the middle one drops out */
+    /* sits on the red overlay while open */
+    &.open {
+      --primary: var(--blue);
+    }
+
+    &.open span:nth-child(1) {
+      transform: translateY(0.6rem) rotate(45deg);
+    }
+    &.open span:nth-child(2) {
+      opacity: 0;
+    }
+    &.open span:nth-child(3) {
+      transform: translateY(-0.6rem) rotate(-45deg);
+    }
+  }
+
+  .mobile-menu {
+    /* swap the palette so the links, and the Button inside, come out inverted */
+    --primary: var(--blue);
+    --secondary: var(--red);
+    display: none;
+    position: fixed;
+    inset: 0;
+    /* under nav (z-index 100) so the toggle stays on top to close it */
+    z-index: 50;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    background-color: var(--secondary);
+    color: var(--primary);
+    /* wipes down from the top of the screen */
+    clip-path: inset(0 0 100% 0);
+    visibility: hidden;
+    transition:
+      clip-path 0.4s ease,
+      visibility 0s linear 0.4s;
+
+    &.open {
+      clip-path: inset(0 0 0 0);
+      visibility: visible;
+      transition:
+        clip-path 0.4s ease,
+        visibility 0s;
+    }
+
+    a {
+      font-family: "Graduate", serif;
+      text-decoration: none;
+      color: var(--primary);
+    }
+
+    a.active {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+
+    hr {
+      width: min(20rem, 70vw);
+      margin: 0;
+      /* drawn in by the open animation */
+      transform: scaleX(0);
+    }
+  }
+
+  @media (max-width: 900px) {
+    nav > a,
+    nav .pill,
+    nav .cta {
+      display: none;
+    }
+
+    .menu-toggle {
+      display: block;
+    }
+
+    .mobile-menu {
+      display: flex;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu-toggle span,
+    .mobile-menu,
+    .mobile-menu.open {
+      transition: none;
+    }
   }
 
   content {

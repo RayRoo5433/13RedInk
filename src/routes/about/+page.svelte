@@ -67,4 +67,52 @@
       }
     }
   }
+
+  /* tablet: stack text over the images and let both use the full width */
+  @media (max-width: 900px) {
+    div#about {
+      flex-direction: column;
+      align-items: stretch;
+      --gutter: clamp(1rem, 6vw, 3rem);
+
+      .text,
+      .images {
+        flex: none;
+        width: 100%;
+      }
+
+      .images {
+        max-width: 40rem;
+        margin: 0 auto;
+      }
+    }
+  }
+
+  /* phone: the body's 32px copy is too big for a narrow column */
+  @media (max-width: 600px) {
+    div#about {
+      padding-inline: 0;
+
+      .text :global(h1) {
+        font-size: 2.2rem;
+      }
+
+      .text :global(p) {
+        font-size: 1.1rem;
+        line-height: 1.5;
+      }
+
+      /* taller box so the overlapping pair doesn't get squashed */
+      .images {
+        aspect-ratio: 1 / 1;
+
+        .base {
+          width: 75%;
+        }
+        .top {
+          width: 55%;
+        }
+      }
+    }
+  }
 </style>

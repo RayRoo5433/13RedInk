@@ -1,8 +1,10 @@
 /* Site colours, usable in any component as var(--name).
    Add new colours here so they stay in one place. */
 :root {
-  --primary:  #950606; /* text, borders, accents */
-  --secondary: #afcddb ; /* background */
+  --red: #950606;
+  --blue: #afcddb;
+  --primary: var(--red); /* text, borders, accents */
+  --secondary: var(--blue); /* background */
 }
 
 @font-face {

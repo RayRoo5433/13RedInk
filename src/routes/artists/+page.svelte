@@ -2,6 +2,7 @@
   import Heading from "../../lib/Heading.svelte";
   import Image from "../../lib/Image.svelte";
   import Paragraph from "../../lib/Paragraph.svelte";
+  import Button from "../../lib/Button.svelte";
   let artists = $state([
     {
       name: "Toby",
@@ -32,8 +33,10 @@
           {artist.name}
         </Heading>
         <Paragraph>{artist.description}</Paragraph>
-        <div class="socials">
-          <a href={artist.facebook}>{artist.alias}</a>
+        <div class="portfolio">
+          <Button variant="reveal" href={artist.instagram || artist.facebook}
+            >portfolio</Button
+          >
         </div>
       </div>
       <div class="images">
@@ -68,8 +71,8 @@
           font-weight: 200;
         }
 
-        .socials {
-          overflow-wrap: anywhere;
+        .portfolio {
+          margin-top: 1rem;
         }
       }
 
@@ -87,6 +90,57 @@
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+      }
+    }
+  }
+
+  /* tablet: one column, photo always above the bio instead of alternating */
+  @media (max-width: 900px) {
+    #artists {
+      --gutter: clamp(1rem, 6vw, 3rem);
+
+      .artist {
+        flex-direction: column;
+        align-items: stretch;
+
+        .text,
+        .images {
+          flex: none;
+          width: 100%;
+        }
+
+        .text,
+        .first {
+          order: 1;
+        }
+
+        .images {
+          order: 0;
+          max-width: 40rem;
+          margin: 0 auto;
+        }
+      }
+    }
+  }
+
+  /* phone: shrink the 32px body copy and use the full width */
+  @media (max-width: 600px) {
+    #artists {
+      padding-inline: 0;
+
+      .artist {
+        .text :global(h1) {
+          font-size: 2.2rem;
+        }
+
+        .text :global(p) {
+          font-size: 1.1rem;
+          line-height: 1.5;
+        }
+
+        .images {
+          aspect-ratio: 4 / 5;
         }
       }
     }
