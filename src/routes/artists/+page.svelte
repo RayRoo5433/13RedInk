@@ -1,4 +1,7 @@
 <script>
+  import Heading from "../../lib/Heading.svelte";
+  import Image from "../../lib/Image.svelte";
+  import Paragraph from "../../lib/Paragraph.svelte";
   let artists = $state([
     {
       name: "Toby",
@@ -25,14 +28,16 @@
   {#each artists as artist, index}
     <div class="artist">
       <div class={`text ${index % 2 == 0 ? " first" : ""}`}>
-        <h1>{artist.name}</h1>
-        <p>{artist.description}</p>
+        <Heading>
+          {artist.name}
+        </Heading>
+        <Paragraph>{artist.description}</Paragraph>
         <div class="socials">
           <a href={artist.facebook}>{artist.alias}</a>
         </div>
       </div>
       <div class="images">
-        <img class="base" src={artist.image} alt="" />
+        <Image src={artist.image} alt={artist.name} classname={"base"} />
       </div>
     </div>
   {/each}
@@ -58,10 +63,9 @@
         position: relative;
         flex: 1 1 20rem;
         min-width: 0;
-        h1 {
-        }
 
         p {
+          font-weight: 200;
         }
 
         .socials {

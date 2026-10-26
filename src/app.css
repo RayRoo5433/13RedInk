@@ -5,7 +5,37 @@
   --secondary: #afcddb ; /* background */
 }
 
+@font-face {
+  font-family: "Graduate";
+  src: url("/Graduate-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  /* hide text until the font arrives instead of flashing a fallback */
+  font-display: block;
+}
+
+/* variable font: one file covers every weight and width */
+@font-face {
+  font-family: "Archivo";
+  src: url("/Archivo-VariableFont_wdth,wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: block;
+}
+
+/* not preloaded: only downloaded if something on the page is italic */
+@font-face {
+  font-family: "Archivo";
+  src: url("/Archivo-Italic-VariableFont_wdth,wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: italic;
+  font-display: block;
+}
+
 html {
+  font-family: "Archivo", sans-serif;
   font-size: 16px;
   color: var(--primary);
 }
@@ -19,11 +49,16 @@ body {
   font-size: 32px;
 }
 
-/* links and form controls don't inherit the text colour by default */
+h1{
+  font-family: "Graduate";
+}
+
+/* links and form controls don't inherit the text colour or font by default */
 a,
 button,
 input,
 textarea,
 select {
   color: inherit;
+  font-family: inherit;
 }

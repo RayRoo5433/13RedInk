@@ -4,6 +4,9 @@
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- fetch the fonts straight away rather than waiting for the CSS to ask for them -->
+		<link rel="preload" href="/Graduate-Regular.ttf" as="font" type="font/ttf" crossorigin />
+		<link rel="preload" href="/Archivo-VariableFont_wdth,wght.ttf" as="font" type="font/ttf" crossorigin />
 		%sveltekit.head%
 	</head>
 	<body>

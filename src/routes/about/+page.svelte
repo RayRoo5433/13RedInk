@@ -1,18 +1,25 @@
+<script>
+  import Heading from "$lib/Heading.svelte";
+  import Image from "$lib/Image.svelte";
+  import Paragraph from "$lib/Paragraph.svelte";
+</script>
+
 <div id="about">
   <div class="text">
-    <h1>Who are we?</h1>
-    <p>
+    <Heading>Who are we?</Heading>
+    <Paragraph>
       lorem ipsum dolor sit amet consectetur adipiscing elit soluta id et
       pariatur repellendus et nostrud ea et est ex dolor nulla ut dolor qui
       excepturi ut molestias consequat quas eos id pariatur dolorum qui sunt
       accusamus eum cum vel cillum qui ipsum et voluptas sunt eum rerum
       accusamus qui cillum
-    </p>
+    </Paragraph>
     <div class="socials"></div>
   </div>
   <div class="images">
-    <img class="base" src="/base.jpg" alt="" />
-    <img class="top" src="/top.jpg" alt="" />
+    <!-- the wrappers place the pair; Image fills whichever box it's in -->
+    <div class="base"><Image src="/base.jpg" /></div>
+    <div class="top"><Image src="/top.jpg" delay={0.3} /></div>
   </div>
 </div>
 
@@ -31,12 +38,6 @@
       position: relative;
       flex: 1 1 20rem;
       min-width: 0;
-      h1 {
-      }
-
-      p {
-      }
-
       .socials {
       }
     }
@@ -47,9 +48,9 @@
       min-width: 0;
       aspect-ratio: 5 / 4;
 
-      img {
+      .base,
+      .top {
         position: absolute;
-        object-fit: cover;
       }
       .base {
         left: 0;

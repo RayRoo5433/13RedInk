@@ -45,8 +45,13 @@
     position: relative;
     border: 0.1rem solid var(--primary);
     background-color: var(--secondary);
+    font-family: "Archivo";
+    font-weight: 400;
+    font-size: 1.5rem;
     border-radius: 2rem;
     cursor: pointer;
+    height: 4rem;
+    padding: 1rem;
 
     span {
       position: absolute;

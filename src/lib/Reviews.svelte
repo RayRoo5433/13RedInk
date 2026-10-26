@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import moment from "moment";
   import Rating from "./Rating.svelte";
+  import gsap from "gsap";
 
   // @ts-ignore
   let items = $state([]);
@@ -17,10 +18,70 @@
     // Triple items for seamless infinite loop
     items = [...items, ...items, ...items];
   });
+
+  /** @type {HTMLElement} */
+  let container;
+  /** @type {HTMLHRElement} */
+  let line;
+  // holds the marquee still until the cards have landed
+  let introDone = $state(false);
+
+  onMount(() => {
+    gsap.from(line, {
+      scaleX: 0,
+      transformOrigin: "left center",
+      duration: 1.2,
+      ease: "power3.inOut",
+    });
+  });
+
+  // reading items.length makes this re-run once the fetch fills the list
+  $effect(() => {
+    if (!items.length) return;
+
+    // only on-screen cards are staggered; the rest of the tripled list
+    // would just add dead time
+    const visible = [...container.querySelectorAll("card")].filter(
+      (card) => card.getBoundingClientRect().left < window.innerWidth,
+    );
+
+    const tl = gsap
+      .timeline({
+        onComplete: () => {
+          introDone = true;
+        },
+      })
+      // card's CSS `transition` would smooth every GSAP frame and lag it
+      .set(visible, { transition: "none" })
+      // open the row smoothly instead of the hero snapping to the new height
+      .from(container, {
+        height: 0,
+        duration: 0.8,
+        ease: "power3.inOut",
+        clearProps: "height",
+      })
+      // cards rise up from below the line
+      .from(
+        visible,
+        {
+          y: 80,
+          opacity: 0,
+          duration: 0.8,
+          stagger: 0.08,
+          ease: "power3.out",
+        },
+        "-=0.4",
+      )
+      // drop inline styles so the CSS hover transform/transition take over
+      .set(visible, { clearProps: "all" });
+
+    return () => tl.kill();
+  });
 </script>
 
 <wrapper>
-  <container>
+  <hr bind:this={line} />
+  <container bind:this={container} class:intro={!introDone}>
     {#each items as item}
       <card>
         <Rating score={5} />
@@ -49,9 +110,15 @@
   wrapper {
     /* overflow: hidden; */
     width: 100%;
+    height: 100%;
   }
 
-  wrapper:hover container {
+  hr {
+    margin: 0;
+  }
+
+  wrapper:hover container,
+  container.intro {
     animation-play-state: paused;
   }
 
@@ -60,7 +127,6 @@
     width: max-content;
     gap: 1rem;
     animation: scroll 60s linear infinite;
-    border-top: 1px solid var(--primary);
     padding-top: 2rem;
   }
 
@@ -88,8 +154,9 @@
 
     /* cap long reviews so one essay doesn't set the height of every card */
     p {
-      font-weight: 200;
+      font-weight: 300;
       font-size: 0.5em;
+      font-style: italic;
       margin: 0.25rem 0;
       display: -webkit-box;
       -webkit-box-orient: vertical;
@@ -124,10 +191,12 @@
         padding: 0;
         margin: 0;
         font-size: 0.95rem;
+        font-weight: 600;
       }
 
       span {
         font-size: 0.75rem;
+        font-weight: 200;
         color: var(--primary);
       }
     }

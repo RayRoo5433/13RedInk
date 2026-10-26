@@ -3,11 +3,15 @@
   import "../app.css";
   import Reviews from "../lib/Reviews.svelte";
   import TextPressure from "../lib/TextPressure.svelte";
+  import Logo from "../lib/Logo.svelte";
 </script>
 
 <div id="hero">
   <div class="title">
-    <TextPressure text="RED 13 INK" />
+    <!-- <TextPressure text="RED 13 INK" /> -->
+    <div class="logo">
+      <Logo />
+    </div>
   </div>
   <div class="reviews">
     <Reviews />
@@ -25,31 +29,23 @@
     height: 85vh;
     overflow: hidden;
 
-    img {
-      /* out of the grid flow so it can't stretch the rows */
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      /* full width on wide screens; on tall/mobile screens scale up to fill the height instead, cropping the sides evenly */
-      object-fit: cover;
-      object-position: center;
-      z-index: 0;
-    }
-
     .title {
       grid-area: 1 / 1;
-      align-self: center;
       position: relative;
-      /* TextPressure sizes its font to width / 5 for 10 chars, so this box fits one line */
-      aspect-ratio: 5 / 1;
+      /* lets the 1fr row shrink below the logo's natural size */
+      min-height: 0;
+      padding: 2rem;
       z-index: 80;
+    }
+
+    .logo {
+      width: 100%;
+      height: 100%;
     }
 
     .reviews {
       grid-area: 2 / 1;
       position: relative;
-      /* temporary just grey boxing */
       z-index: 1;
     }
   }
