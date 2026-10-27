@@ -58,8 +58,19 @@
         ease: "expo.out",
         clearProps: "transform",
       })
-      // the pill's x belongs to the effect below, so just fade it in once the links land
-      .from(pill, { opacity: 0, duration: 0.4 }, "-=0.4");
+      // the pill's x belongs to the effect below, so just fade it in once the
+      // links land, and only if this page has a link for it to sit under
+      .call(
+        () => {
+          introDone = true;
+          if (pillShown) {
+            pillLit = true;
+            gsap.to(pill, { autoAlpha: 1, duration: 0.4 });
+          }
+        },
+        [],
+        "-=0.4",
+      );
 
     document.fonts.load('1em "Graduate"').then(() => {
       fontReady = true;
@@ -111,6 +122,11 @@
 
   // whether the pill is currently under a link (false while collapsed)
   let pillShown = false;
+  // whether the pill can actually be seen; the active link only turns cream
+  // then, otherwise it's cream on blue while the nav slides in
+  let pillLit = $state(false);
+  // the pill stays hidden until the nav has slid in
+  let introDone = false;
 
   /** @param {number} duration */
   function placePill(duration) {
@@ -119,21 +135,22 @@
 
     if (!activeElement) {
       // on a page with no nav link (e.g. /contact) shrink into its own centre
+      // its outline and shadow would still show at zero width, so fade it too
       gsap.to(pill, {
         x: Number(gsap.getProperty(pill, "x")) + pill.offsetWidth / 2,
         width: 0,
+        autoAlpha: 0,
         duration,
         overwrite: "auto",
       });
       pillShown = false;
+      pillLit = false;
       return;
     }
 
     // offsetLeft/offsetTop are relative to nav (position: relative)
-    const y =
-      activeElement.offsetTop +
-      activeElement.offsetHeight / 2 -
-      pill.offsetHeight / 2;
+    const y = activeElement.offsetTop;
+    const height = activeElement.offsetHeight;
 
     // coming back from collapsed: grow out from the link's centre rather than
     // sliding over from wherever it shrank
@@ -141,7 +158,10 @@
       gsap.set(pill, {
         x: activeElement.offsetLeft + activeElement.offsetWidth / 2,
         y,
+        height,
         width: 0,
+        // leans like a Persona menu highlight
+        skewX: -12,
       });
       pillShown = true;
     }
@@ -149,7 +169,12 @@
     gsap.to(pill, {
       x: activeElement.offsetLeft,
       y,
+      height,
       width: activeElement.offsetWidth,
+      ...(introDone && { autoAlpha: 1 }),
+      onStart: () => {
+        if (introDone) pillLit = true;
+      },
       duration,
       // a resize mid-slide snaps straight to the new spot
       overwrite: "auto",
@@ -171,6 +196,7 @@
         href={tab.href}
         bind:this={links[i]}
         class:active={isActive(tab.href)}
+        class:lit={isActive(tab.href) && pillLit}
         aria-current={isActive(tab.href) ? "page" : undefined}>{tab.name}</a
       >
     {/each}
@@ -224,6 +250,8 @@
   nav {
     position: relative;
     width: 100%;
+    box-sizing: border-box;
+    padding-inline: var(--page-pad);
     top: 0px;
     z-index: 100;
     display: flex;
@@ -235,14 +263,22 @@
     margin: 0 auto;
 
     a {
+      /* above the pill, which sits behind the active link */
+      position: relative;
+      z-index: 1;
+      padding: 0 0.35em;
       font-family: "Graduate", serif;
       text-decoration: none;
-      color: var(--primary);
+      color: var(--ink);
+      transition: color 0.2s ease;
     }
 
-    a.active {
-      /* text-decoration: underline; */
-      text-underline-offset: 0.2em;
+    a:hover {
+      color: var(--red);
+    }
+
+    a.lit {
+      color: var(--cream);
     }
   }
   :global(hr) {
@@ -250,18 +286,24 @@
     margin: 0.5em auto;
     padding: 0;
     border: none;
-    border-top: 1px solid var(--primary);
+    border-top: 4px solid var(--ink);
   }
 
+  /* skewed red block behind the active link, outlined and dropped like a Card */
   .pill {
     position: absolute;
     top: 0;
     left: 0;
     pointer-events: none;
     width: 0px;
-    height: 2.5rem;
-    border-bottom: 3px solid var(--primary);
-    background-color: transparent;
+    height: 0px;
+    box-sizing: border-box;
+    background-color: var(--red);
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    /* faded in once the nav lands, see the intro */
+    opacity: 0;
+    visibility: hidden;
   }
 
   .menu-toggle {
@@ -386,10 +428,12 @@
 
   content {
     display: block;
-    height: 90vh;
-    /* mobile browsers: ignore the space the address bar takes */
-    height: 90dvh;
+    /* whatever height the header leaves, see body in app.css */
+    flex: 1;
+    min-height: 0;
     overflow-y: scroll;
+    /* slam-ins start off the side; don't let them widen the page */
+    overflow-x: hidden;
 
     /* `&` attaches these to content's own scrollbar; a bare/:global selector
        here would target scrollbars of elements *inside* content instead */

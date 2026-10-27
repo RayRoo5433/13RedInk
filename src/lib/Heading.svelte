@@ -30,9 +30,15 @@
   div {
     overflow: hidden;
     height: fit-content;
+    /* room inside the mask for the drop shadow */
+    padding: 0 6px 6px 0;
   }
 
+  /* red with an ink outline and a hard ink drop, like the cards */
   h1 {
     margin: 0;
+    color: var(--red);
+    -webkit-text-stroke: 1.5px var(--ink);
+    text-shadow: 5px 5px 0 var(--ink);
   }
 </style>

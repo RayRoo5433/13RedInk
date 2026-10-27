@@ -12,8 +12,14 @@
   let wrapper;
   let outline;
   let label;
+  /** the label's mask, which takes the hover lean */
+  let mask;
   let shadow;
+  /** the red background, its own layer so the reveal can wipe it in */
+  let fill;
   let tween;
+  /** where the shadow sits at rest and while hovered, set once measured */
+  let offsets = { rest: { x: 0, y: 0 }, hover: { x: 0, y: 0 } };
   // hover is held off until the reveal has dropped the shadow into place
   let revealed = variant !== "reveal";
   // once the drawn outline lands, the real border takes over
@@ -31,17 +37,22 @@
       opacity: 1,
     };
 
-    // paused so it only plays on hover/focus, tucking the shadow behind the button;
-    // reverse() brings it back out to the CSS state
-    tween = gsap.fromTo(shadow, rest, {
-      x: 0,
-      y: 0,
-      opacity: 0,
-      duration: reduceMotion ? 0 : 0.35,
-      ease: "power3.out",
-      paused: true,
-      immediateRender: false,
-    });
+    // paused so it only plays on hover/focus: the shadow kicks further out
+    // and skews one way while the label leans the other, springing past and
+    // settling; reverse() brings both back to the CSS state
+    const spring = { duration: reduceMotion ? 0 : 0.3, ease: "back.out(3)" };
+    offsets = {
+      rest: { x: rest.x, y: rest.y },
+      hover: { x: rest.x + 4, y: rest.y + 4 },
+    };
+    tween = gsap
+      .timeline({ paused: true })
+      .fromTo(
+        shadow,
+        { ...rest, skewX: 0 },
+        { ...offsets.hover, skewX: 12, ...spring },
+      )
+      .to(mask, { skewX: -10, ...spring }, 0);
 
     let intro;
     let observer;
@@ -101,6 +112,12 @@
           // hand over to the real border, which sits under the shadow properly
           .call(() => (drawn = true))
           .set(outline, { autoAlpha: 0 })
+          // the red slashes in from the left at a lean and squares up
+          .fromTo(
+            fill,
+            { scaleX: 0, skewX: -25 },
+            { scaleX: 1, skewX: 0, duration: 0.45, ease: "expo.out" },
+          )
           .from(label, { yPercent: 110, duration: 0.8, ease: "hop" }, "-=0.3")
           .from(shadow, {
             x: 0,
@@ -123,6 +140,20 @@
   const show = () => revealed && tween?.play();
   const hide = () => revealed && tween?.reverse();
 
+  // pressing tucks the shadow right under, like the button being pushed in;
+  // letting go springs it back out to wherever hover left it
+  const press = () =>
+    revealed && gsap.to(shadow, { x: 0, y: 0, duration: 0.08, ease: "power2.out" });
+  const release = () => {
+    if (!revealed) return;
+    const hovered = tween.progress() > 0 && !tween.reversed();
+    gsap.to(shadow, {
+      ...(hovered ? offsets.hover : offsets.rest),
+      duration: 0.3,
+      ease: "back.out(3)",
+    });
+  };
+
   /** @param {MouseEvent} event */
   function handleClick(event) {
     if (!href) return onclick?.(event);
@@ -141,6 +172,8 @@
     onmouseleave={hide}
     onfocus={show}
     onblur={hide}
+    onpointerdown={press}
+    onpointerup={release}
     {...rest}
   >
     {#if variant === "reveal"}
@@ -149,8 +182,10 @@
         <rect pathLength="100" stroke-dashoffset="-50" />
       </svg>
     {/if}
-    <span class="mask"><span bind:this={label} class="label">{@render children()}</span></span>
+    <span bind:this={mask} class="mask"><span bind:this={label} class="label">{@render children()}</span></span>
     <span bind:this={shadow} class="shadow" aria-hidden="true"></span>
+    <!-- after the shadow so it paints over it, both under the label -->
+    <span bind:this={fill} class="fill" aria-hidden="true"></span>
   </button>
 {/snippet}
 
@@ -170,15 +205,17 @@
   button {
     /* anchors the shadow; no transform or z-index here or the shadow ends up on top */
     position: relative;
-    border: 0.1rem solid var(--primary);
-    background-color: var(--secondary);
+    border: 3px solid var(--ink);
+    /* the red is the .fill layer, see below */
+    background-color: transparent;
+    color: var(--cream);
     font-family: "Archivo";
-    font-weight: 400;
-    font-size: 1.5rem;
-    border-radius: 2rem;
+    font-weight: 800;
+    font-size: 1.25rem;
+    border-radius: 0;
     cursor: pointer;
     height: 4rem;
-    padding: 1rem;
+    padding: 0 1.5rem;
 
     /* the svg draws the outline in, then hands back to this border */
     &.reveal:not(.drawn) {
@@ -188,15 +225,15 @@
     .outline {
       position: absolute;
       /* the button's border box, not its padding box */
-      inset: -0.1rem;
-      width: calc(100% + 0.2rem);
-      height: calc(100% + 0.2rem);
+      inset: -3px;
+      width: calc(100% + 6px);
+      height: calc(100% + 6px);
       overflow: visible;
       pointer-events: none;
 
       rect {
         fill: none;
-        stroke: var(--primary);
+        stroke: var(--ink);
       }
     }
 
@@ -211,14 +248,30 @@
       display: inline-block;
     }
 
-    .shadow {
+    .fill {
       position: absolute;
       inset: 0;
       z-index: -1;
-      border-radius: 2rem;
-      background-color: var(--primary);
-      /* visible by default, hover slides it back under the button */
-      transform: translate(-0.3rem, 0.3rem);
+      background-color: var(--red);
+      transform-origin: left center;
+      pointer-events: none;
+    }
+
+    /* empty until the reveal wipes it in */
+    &.reveal:not(.drawn) .fill {
+      transform: scaleX(0);
+    }
+
+    .shadow {
+      position: absolute;
+      /* cover the border too so the drop shadow matches the outline */
+      inset: -3px;
+      z-index: -1;
+      background-color: var(--ink);
+      /* hard drop shadow; hover kicks it out and skews it, pressing tucks
+         it under so the button looks pushed in */
+      transform: translate(5px, 5px);
+      transform-origin: bottom left;
       pointer-events: none;
     }
   }

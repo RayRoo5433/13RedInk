@@ -3,8 +3,13 @@
 :root {
   --red: #950606;
   --blue: #afcddb;
+  --ink: #1a1614; /* outlines and hard drop shadows */
+  --cream: #f1e7d0; /* card faces, text on red */
   --primary: var(--red); /* text, borders, accents */
   --secondary: var(--blue); /* background */
+  /* gap between page content and the screen edges; each page applies it
+     itself so full-bleed bands (like the reviews) can reach the edges */
+  --page-pad: clamp(1rem, 4vw, 2rem);
 }
 
 @font-face {
@@ -46,9 +51,14 @@ body {
   background-color: var(--secondary);
   scroll-behavior: auto;
   overflow: hidden;
+  /* header on top, the page's scroll area (<content>) takes the rest; dvh
+     ignores the space mobile address bars take */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
   margin: 0px;
-  /* tighter edges on narrow screens */
-  padding: 0 clamp(1rem, 4vw, 2rem);
+  padding: 0;
   font-size: 32px;
 }
 

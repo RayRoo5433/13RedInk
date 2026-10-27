@@ -39,7 +39,10 @@
 
   let letters = [];
   let fills = [],
-    outlines = [];
+    outlines = [],
+    shadows = [];
+  // how far the ink layer sits down and right of each letter, in viewBox units
+  const DROP = 20;
 
   onMount(() => {
     const stagger = { amount: 0.5, from: "start", ease: "power1.out" };
@@ -65,6 +68,14 @@
     );
     tl.from(fills, { opacity: 0, duration: 0.78, stagger }, 0.91);
     tl.to(outlines, { opacity: 0, duration: 0.4, stagger }, 1.56);
+    // once the red is in, the ink copy underneath slides out to its offset,
+    // the same hard drop as the cards and buttons
+    tl.fromTo(
+      shadows,
+      { x: 0, y: 0, opacity: 0 },
+      { x: DROP, y: DROP, opacity: 1, duration: 0.5, ease: "back.out(2)", stagger },
+      1.5,
+    );
 
     // the 13 flickers every few seconds
     const thirteen = letters.filter((_, i) =>
@@ -89,9 +100,12 @@
   });
 </script>
 
-<svg viewBox="60 143 1632 1511" role="img" aria-label="Red 13 Ink">
+<!-- viewBox grown by DROP so the ink layer under the last letters isn't cut off -->
+<svg viewBox="60 143 {1632 + DROP} {1511 + DROP}" role="img" aria-label="Red 13 Ink">
   {#each glyphs as g, i}
     <g bind:this={letters[i]}>
+      <!-- solid ink copy of the letter, offset underneath it -->
+      <path bind:this={shadows[i]} d={g.d} fill="var(--ink)" />
       <path bind:this={fills[i]} d={g.d} fill="var(--primary)" />
       <path
         bind:this={outlines[i]}

@@ -99,7 +99,7 @@
   /* phone: the body's 32px copy is too big for a narrow column */
   @media (max-width: 600px) {
     div#about {
-      padding-inline: 0;
+      padding-inline: var(--page-pad);
 
       .text :global(h1) {
         font-size: 2.2rem;

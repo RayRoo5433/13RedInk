@@ -127,7 +127,7 @@
   /* phone: shrink the 32px body copy and use the full width */
   @media (max-width: 600px) {
     #artists {
-      padding-inline: 0;
+      padding-inline: var(--page-pad);
 
       .artist {
         .text :global(h1) {

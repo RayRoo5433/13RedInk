@@ -4,31 +4,17 @@
   import Reviews from "../lib/Reviews.svelte";
   import TextPressure from "../lib/TextPressure.svelte";
   import Logo from "../lib/Logo.svelte";
-  import { gsap } from "$lib/gsap";
-  import { addressLines, hours } from "$lib/studio";
-
-  const [street, city, postcode] = addressLines;
-  const openDays = hours.filter((h) => h.open);
-  const openRange = `${openDays[0].day}–${openDays.at(-1).day}`;
-
-  /** @type {HTMLElement} */
-  let location;
-
-  $effect(() => {
-    // rises out of its masks just after the reviews line starts drawing in
-    const tween = gsap.from(location.querySelectorAll(".rise"), {
-      yPercent: 110,
-      duration: 0.8,
-      ease: "power3.out",
-      stagger: 0.05,
-      delay: 0.4,
-    });
-
-    return () => tween.kill();
-  });
 </script>
 
 <div id="hero">
+  <!-- light streaks fanning out from behind the logo, like the sunburst on
+       old flash sheets -->
+  <div class="halo" aria-hidden="true">
+    <div class="burst">
+      <div class="rays wide"></div>
+      <div class="rays fine"></div>
+    </div>
+  </div>
   <div class="title">
     <!-- <TextPressure text="RED 13 INK" /> -->
     <div class="logo">
@@ -36,23 +22,6 @@
     </div>
   </div>
   <div class="reviews">
-    <div class="location" bind:this={location}>
-      <!-- <p class="city mask"><span class="rise">{city}</span></p> -->
-      <dl>
-        <div>
-          <dt class="mask"><span class="rise">Address</span></dt>
-          <dd class="mask"><span class="rise">{street}</span></dd>
-          <dd class="mask"><span class="rise">{postcode}</span></dd>
-        </div>
-        <div>
-          <dt class="mask"><span class="rise">Open</span></dt>
-          <dd class="mask"><span class="rise">{openRange}</span></dd>
-        </div>
-      </dl>
-      <p class="visit mask">
-        <span class="rise"><a href="/contact">Visit us →</a></span>
-      </p>
-    </div>
     <Reviews />
   </div>
 </div>
@@ -65,9 +34,8 @@
     grid-template-rows: minmax(0, 1fr) auto;
     /* stop the wide reviews strip from stretching the column (and pushing the h1 off-screen) */
     grid-template-columns: minmax(0, 1fr);
-    height: 85vh;
-    /* mobile browsers: ignore the space the address bar takes */
-    height: 85dvh;
+    /* fill the scroll area so the red reviews band sits on the bottom edge */
+    height: 100%;
     overflow: hidden;
 
     .title {
@@ -91,91 +59,80 @@
     }
   }
 
-  /* Swiss-style strip: big city name on the left, small facts hung off a
-     12-column grid on the right, everything sitting on one baseline */
-  .location {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: 1rem;
-    align-items: end;
-    padding-bottom: 0.5rem;
+  .halo {
+    grid-area: 1 / 1;
+    position: relative;
+    z-index: 0;
+    pointer-events: none;
+  }
 
-    .city {
-      grid-column: 1 / 7;
-      margin: 0;
-      font-size: clamp(2.5rem, 7vw, 6rem);
-      font-weight: 800;
-      line-height: 0.85;
-      letter-spacing: -0.04em;
-    }
+  /* a big square centred on the logo; the mask leaves a clear hole where the
+     logo sits, peaks just outside it and fades the streaks out to nothing */
+  .burst {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(130vmin, 56rem);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    mask-image: radial-gradient(
+      circle,
+      transparent 0 14%,
+      #000 22%,
+      rgb(0 0 0 / 0.55) 34%,
+      transparent 58%
+    );
+    animation: burst-in 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
 
-    dl {
-      grid-column: 1 / 11;
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      column-gap: 1rem;
-      margin: 0;
-      font-size: 1rem;
-      line-height: 1.2;
-    }
+  .rays {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+  }
 
-    dt {
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-    }
+  /* each streak is soft-edged (fades up and back down across its width) and
+     the two layers have periods that don't line up, so the spacing reads as
+     irregular rather than a pattern. Colour is the site cream, --cream */
+  .wide {
+    background: repeating-conic-gradient(
+      from 0deg,
+      rgb(241 231 208 / 0) 0deg,
+      rgb(241 231 208 / 0.6) 1.1deg,
+      rgb(241 231 208 / 0) 2.4deg,
+      transparent 2.4deg 9deg
+    );
+    animation: spin 160s linear infinite;
+  }
 
-    dd {
-      margin: 0;
-      font-weight: 200;
-    }
+  .fine {
+    background: repeating-conic-gradient(
+      from 3deg,
+      transparent 0deg 4deg,
+      rgb(241 231 208 / 0.35) 4.5deg,
+      transparent 5.2deg 13deg
+    );
+    filter: blur(0.5px);
+    animation: spin 240s linear infinite reverse;
+  }
 
-    .visit {
-      grid-column: 11 / 13;
-      margin: 0;
-      font-size: 1rem;
-      line-height: 1.2;
-      text-align: right;
-    }
-
-    a {
-      text-decoration: none;
-      font-weight: 400;
-      border-bottom: 1px solid currentColor;
-    }
-    a:hover {
-      border-bottom-color: transparent;
+  @keyframes burst-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.7) rotate(-20deg);
     }
   }
 
-  .mask {
-    display: block;
-    overflow: hidden;
-  }
-  .rise {
-    display: block;
-  }
-
-  /* tablet and down: city on its own line, facts in a row under it */
-  @media (max-width: 900px) {
-    .location {
-      row-gap: 0.75rem;
-
-      .city {
-        grid-column: 1 / 13;
-      }
-      dl {
-        grid-column: 1 / 10;
-      }
-      .visit {
-        grid-column: 10 / 13;
-      }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
     }
   }
 
-  @media (max-width: 600px) {
-    .location dl,
-    .location .visit {
-      font-size: 0.85rem;
+  @media (prefers-reduced-motion: reduce) {
+    .burst,
+    .rays {
+      animation: none;
     }
   }
 </style>

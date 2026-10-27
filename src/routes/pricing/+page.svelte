@@ -3,7 +3,9 @@
   import Heading from "../../lib/Heading.svelte";
   import Button from "../../lib/Button.svelte";
   import Paragraph from "../../lib/Paragraph.svelte";
+  import Card from "$lib/Card.svelte";
   import { gsap } from "$lib/gsap";
+  import { slamIn, tilt } from "$lib/p5";
 
   const cards = [
     {
@@ -36,21 +38,13 @@
   let grid;
 
   $effect(() => {
-    // the cards rise in one after another like the review cards, then each
+    // the cards slam in one after another like the review cards, then each
     // price rises out of its mask; the Heading, Paragraph and reveal Button
     // inside each card animate themselves on the same scroll point
-    const cardEls = grid.querySelectorAll(".card");
     const tl = gsap
       .timeline({ scrollTrigger: { trigger: grid, start: "top 85%" } })
-      // the card's CSS `transition` would smooth every GSAP frame and lag it
-      .set(cardEls, { transition: "none" })
-      .from(cardEls, {
-        y: 80,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.08,
-        ease: "power3.out",
-      })
+      // the slot takes the slam so it doesn't fight the Card's own tilt
+      .add(slamIn(grid.querySelectorAll(".slot")))
       .from(
         grid.querySelectorAll(".rise"),
         {
@@ -60,9 +54,7 @@
           stagger: 0.05,
         },
         0.4,
-      )
-      // drop inline styles so the CSS hover transform/transition take over
-      .set(cardEls, { clearProps: "all" });
+      );
 
     return () => {
       tl.scrollTrigger?.kill();
@@ -75,7 +67,9 @@
   <!-- <h1>Pricing</h1> -->
 
   <div class="cards" bind:this={grid}>
-    {#each cards as card}
+    {#each cards as card, i}
+      <div class="slot">
+      <Card tilt={tilt(i)} interactive style="height: 100%">
       <div class="card">
         <content>
           <Heading>{card.name}</Heading>
@@ -89,6 +83,8 @@
           <Button href={"/contact"} variant="reveal">Book Now!</Button>
         </footer>
       </div>
+      </Card>
+      </div>
     {/each}
   </div>
 
@@ -99,7 +95,7 @@
   #pricing {
     --gutter: clamp(1rem, 8vw, 10rem);
     gap: var(--gutter);
-    /* padding: var(--gutter); */
+    padding-inline: var(--page-pad);
     box-sizing: border-box;
 
     .cards {
@@ -118,12 +114,8 @@
       flex-direction: column;
       justify-content: space-between;
       padding: 16px;
-      border: 2px solid var(--primary);
+      box-sizing: border-box;
       height: 100%;
-      /* hover lifts the card off a hard offset shadow, like the Button's */
-      transition:
-        transform 0.35s cubic-bezier(0.215, 0.61, 0.355, 1),
-        box-shadow 0.35s cubic-bezier(0.215, 0.61, 0.355, 1);
 
       content {
         :global(h1) {
@@ -156,11 +148,6 @@
             font-size: clamp(1rem, 1.5vw, 2rem);
           }
         }
-      }
-
-      &:hover {
-        transform: translate(0.3rem, -0.3rem);
-        box-shadow: -0.6rem 0.6rem 0 var(--primary);
       }
     }
 

@@ -2,7 +2,9 @@
   import { onMount } from "svelte";
   import moment from "moment";
   import Rating from "./Rating.svelte";
-  import gsap from "gsap";
+  import Card from "./Card.svelte";
+  import { gsap } from "$lib/gsap";
+  import { dropIn, primeDrop, tilt } from "./p5.js";
 
   // @ts-ignore
   let items = $state([]);
@@ -15,16 +17,22 @@
     items = items.sort((a, b) => b.date - a.date);
     console.log(items);
 
-    // Triple items for seamless infinite loop
-    items = [...items, ...items, ...items];
+    // repeat the list until it's comfortably wider than the screen, so a card
+    // wrapping round from the left edge always reappears off the right
+    const slotWidth = Math.min(320, window.innerWidth * 0.8) + 32;
+    const repeats = Math.max(
+      2,
+      Math.ceil((window.innerWidth + slotWidth * 2) / (items.length * slotWidth)),
+    );
+    items = Array.from({ length: repeats }, () => items).flat();
   });
 
   /** @type {HTMLElement} */
   let container;
+  /** @type {HTMLElement} */
+  let drawer;
   /** @type {HTMLHRElement} */
   let line;
-  // holds the marquee still until the cards have landed
-  let introDone = $state(false);
 
   onMount(() => {
     gsap.from(line, {
@@ -39,76 +47,159 @@
   $effect(() => {
     if (!items.length) return;
 
-    // only on-screen cards are staggered; the rest of the tripled list
-    // would just add dead time
-    const visible = [...container.querySelectorAll("card")].filter(
-      (card) => card.getBoundingClientRect().left < window.innerWidth,
-    );
+    const slots = /** @type {HTMLElement[]} */ ([
+      ...container.querySelectorAll(".slot"),
+    ]);
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
+    // each card's resting spot in the row and width, and the length of the
+    // whole row including the gap after the last card; measured once and
+    // again on resize rather than every frame
+    /** @type {number[]} */
+    let lefts = [];
+    /** @type {number[]} */
+    let widths = [];
+    let total = 0;
+    const measure = () => {
+      lefts = slots.map((slot) => slot.offsetLeft);
+      widths = slots.map((slot) => slot.offsetWidth);
+      const last = slots.length - 1;
+      const gap = lefts[1] - (lefts[0] + widths[0]);
+      total = lefts[last] + widths[last] + gap - lefts[0];
+    };
+    measure();
+
+    // every card scrolls left on its own and, once fully off the left edge,
+    // wraps round to the end of the row off the right. A wrapped card waits
+    // above the drawer and only drops once it's fully in view
+    const scroll = { by: 0 };
+    const setX = slots.map((slot) => gsap.quickSetter(slot, "x", "px"));
+    const at = slots.map((_, i) => lefts[i]);
+    const waiting = slots.map(() => false);
+    /** @param {number} i */
+    const fullyVisible = (i) => at[i] + widths[i] <= drawer.clientWidth;
+
+    const place = () => {
+      slots.forEach((slot, i) => {
+        const min = -widths[i];
+        const now = gsap.utils.wrap(min, min + total, lefts[i] - scroll.by);
+        if (now > at[i] + 1) {
+          waiting[i] = true;
+          primeDrop(slot);
+        }
+        at[i] = now;
+        setX[i](now - lefts[i]);
+        if (waiting[i] && fullyVisible(i)) {
+          waiting[i] = false;
+          dropIn(slot);
+        }
+      });
+    };
+
+    // a steady 50px a second however long the row is
+    const marquee = gsap.to(scroll, {
+      by: () => total,
+      duration: total / 50,
+      ease: "none",
+      repeat: -1,
+      paused: true,
+      onUpdate: place,
+    });
+
+    // hovering eases the row to a stop rather than freezing it
+    const slowDown = () =>
+      gsap.to(marquee, { timeScale: 0, duration: 0.4, overwrite: true });
+    const speedUp = () =>
+      gsap.to(marquee, { timeScale: 1, duration: 0.4, overwrite: true });
+    container.addEventListener("mouseenter", slowDown);
+    container.addEventListener("mouseleave", speedUp);
+
+    const observer = new ResizeObserver(() => {
+      const progress = marquee.progress();
+      measure();
+      marquee
+        .invalidate()
+        .duration(total / 50)
+        .progress(progress);
+      place();
+    });
+    observer.observe(container);
+
+    // the cards fully on screen drop with the intro; the rest, including one
+    // cut off at the right edge, wait above until they're fully in view
+    const shown = slots.filter((_, i) => fullyVisible(i));
+    if (!reduceMotion) {
+      slots.forEach((slot, i) => {
+        if (!fullyVisible(i)) {
+          waiting[i] = true;
+          primeDrop(slot);
+        }
+      });
+    }
+
+    // the red drawer pushes up from the bottom of the hero first, then the
+    // cards fall into it through its top edge; the row starts once they land
     const tl = gsap
       .timeline({
         onComplete: () => {
-          introDone = true;
+          if (!reduceMotion) marquee.play();
         },
       })
-      // card's CSS `transition` would smooth every GSAP frame and lag it
-      .set(visible, { transition: "none" })
-      // open the row smoothly instead of the hero snapping to the new height
-      .from(container, {
+      .from(drawer, {
         height: 0,
         duration: 0.8,
         ease: "power3.inOut",
         clearProps: "height",
       })
-      // cards rise up from below the line
-      .from(
-        visible,
-        {
-          y: 80,
-          opacity: 0,
-          duration: 0.8,
-          stagger: 0.08,
-          ease: "power3.out",
-        },
-        "-=0.4",
-      )
-      // drop inline styles so the CSS hover transform/transition take over
-      .set(visible, { clearProps: "all" });
+      .add(dropIn(shown), "-=0.15");
 
-    return () => tl.kill();
+    return () => {
+      tl.kill();
+      marquee.kill();
+      observer.disconnect();
+      container.removeEventListener("mouseenter", slowDown);
+      container.removeEventListener("mouseleave", speedUp);
+    };
   });
 </script>
 
 <wrapper>
   <hr bind:this={line} />
-  <container bind:this={container} class:intro={!introDone}>
-    {#each items as item}
-      <card>
-        <Rating score={5} />
-        <p>{item.text}</p>
-        <section>
-          <img src={item.photo} alt="smthn" />
-          <div>
-            <h1>{item.name}</h1>
-            <span>{moment(item.date).fromNow()}</span>
+  <div class="drawer" bind:this={drawer}>
+  <container bind:this={container}>
+    {#each items as item, i}
+      <!-- the slot takes the drop-in so it doesn't fight the card's own tilt -->
+      <div class="slot">
+        <Card tilt={tilt(i)} interactive>
+          <div class="review">
+            <Rating score={5} />
+            <p>{item.text}</p>
+            <section>
+              <img src={item.photo} alt="" />
+              <div>
+                <h1>{item.name}</h1>
+                <span>{moment(item.date).fromNow()}</span>
+              </div>
+            </section>
           </div>
-        </section>
-      </card>
+        </Card>
+      </div>
     {/each}
   </container>
+  </div>
 </wrapper>
 
 <style>
   /* custom tags are inline by default, so width/overflow don't apply without this */
   wrapper,
-  container,
-  card {
+  container {
     display: block;
     box-sizing: border-box;
   }
 
   wrapper {
-    /* overflow: hidden; */
     width: 100%;
     height: 100%;
   }
@@ -117,47 +208,48 @@
     margin: 0;
   }
 
-  wrapper:hover container,
-  container.intro {
-    animation-play-state: paused;
+  /* the red band the marquee runs along; clips the cards as they drop in
+     through its top edge */
+  .drawer {
+    background-color: var(--red);
+    overflow: hidden;
   }
 
   container {
-    display: flex;
-    width: max-content;
-    gap: 1rem;
-    animation: scroll 60s linear infinite;
-    padding-top: 2rem;
-  }
-
-  @keyframes scroll {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-33.33%);
-    }
-  }
-
-  card {
+    /* card offsets are measured from here */
     position: relative;
     display: flex;
-    flex-direction: column;
+    width: max-content;
+    gap: 2rem;
+    /* room for the tilt, the drop shadow and the hover lift */
+    padding: 2rem 1rem 1.5rem;
+  }
+
+  .slot {
     width: min(20rem, 80vw);
-    background-color: var(--secondary);
-    border: 1px solid var(--primary);
-    border-radius: 8px;
-    padding: 1rem;
     flex-shrink: 0;
-    transition: 0.2s ease-in-out;
-    z-index: 1;
+  }
+
+  .review {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1rem 1.25rem;
+    box-sizing: border-box;
+    font-size: 1rem;
+
+    /* the Rating's stars */
+    > :global(span) {
+      color: var(--red);
+      font-size: 1.25rem;
+      letter-spacing: 3px;
+    }
 
     /* cap long reviews so one essay doesn't set the height of every card */
     p {
-      font-weight: 300;
-      font-size: 0.5em;
-      font-style: italic;
-      margin: 0.25rem 0;
+      font-weight: 400;
+      line-height: 1.5;
+      margin: 0.5rem 0 0.75rem;
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;
@@ -168,15 +260,14 @@
     /* pushed to the bottom of the card so authors line up across cards */
     section {
       display: flex;
-      flex-direction: row;
       align-items: center;
       gap: 0.75rem;
       margin-top: auto;
-      padding-top: 0.5rem;
 
       img {
         width: 40px;
         height: 40px;
+        border: 2px solid var(--ink);
         border-radius: 50%;
         object-fit: cover;
       }
@@ -188,54 +279,18 @@
       }
 
       h1 {
-        padding: 0;
         margin: 0;
-        font-size: 0.95rem;
-        font-weight: 600;
+        font-family: "Graduate", serif;
+        font-size: 1rem;
+        font-weight: 400;
+        color: var(--red);
       }
 
       span {
         font-size: 0.75rem;
-        font-weight: 200;
-        color: var(--primary);
+        font-weight: 400;
       }
     }
   }
 
-  card:hover {
-    transform: scale(1.03) translate(0rem, -1rem);
-  }
-
-  card::before {
-    content: "";
-    position: absolute;
-    background-color: var(--secondary);
-    border-radius: 8px;
-    z-index: 1;
-    inset: 0;
-  }
-
-  card::after {
-    content: "";
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
-    background-color: var(--primary);
-    border-radius: 8px;
-    transition: 0.3s ease-in-out;
-    z-index: -1;
-    opacity: 0;
-  }
-
-  card:hover::after {
-    transform: translate(0rem, 1rem) scale(0.970874);
-    opacity: 0.8;
-  }
-
-  card * {
-    position: relative;
-    z-index: 2 !important;
-  }
 </style>
