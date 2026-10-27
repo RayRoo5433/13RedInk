@@ -387,6 +387,8 @@
   content {
     display: block;
     height: 90vh;
+    /* mobile browsers: ignore the space the address bar takes */
+    height: 90dvh;
     overflow-y: scroll;
 
     /* `&` attaches these to content's own scrollbar; a bare/:global selector

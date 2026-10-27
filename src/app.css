@@ -47,7 +47,8 @@ body {
   scroll-behavior: auto;
   overflow: hidden;
   margin: 0px;
-  padding: 0rem 2rem 0rem 2rem;
+  /* tighter edges on narrow screens */
+  padding: 0 clamp(1rem, 4vw, 2rem);
   font-size: 32px;
 }
 

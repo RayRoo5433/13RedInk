@@ -1,6 +1,6 @@
 <script>
   import { gsap } from "$lib/gsap";
-  let { children } = $props();
+  let { children, style = "" } = $props();
   let text;
 
   $effect(() => {
@@ -21,7 +21,7 @@
 </script>
 
 <div>
-  <h1 bind:this={text}>
+  <h1 {style} bind:this={text}>
     {@render children()}
   </h1>
 </div>

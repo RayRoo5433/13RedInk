@@ -1,6 +1,6 @@
 <script>
   import { gsap, SplitText } from "$lib/gsap";
-  let { children } = $props();
+  let { children, style = "" } = $props();
   let text;
 
   $effect(() => {
@@ -15,7 +15,7 @@
       yPercent: 110,
       duration: 0.8,
       ease: "power3.out",
-      stagger: 0.02,
+      stagger: 0.05,
       // lets a Heading above land its first move before the words start
       delay: 0.25,
       scrollTrigger: { trigger: text, start: "top 85%" },
@@ -29,7 +29,7 @@
   });
 </script>
 
-<p bind:this={text}>{@render children()}</p>
+<p {style} bind:this={text}>{@render children()}</p>
 
 <style>
   p {

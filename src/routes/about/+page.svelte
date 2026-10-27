@@ -38,7 +38,15 @@
       position: relative;
       flex: 1 1 20rem;
       min-width: 0;
-      .socials {
+
+      :global(h1) {
+        font-size: clamp(2.2rem, 8vw, 8rem);
+        font-weight: 600;
+      }
+
+      :global(p) {
+        font-size: clamp(1.1rem, 3vw, 3rem);
+        font-weight: 200;
       }
     }
 
