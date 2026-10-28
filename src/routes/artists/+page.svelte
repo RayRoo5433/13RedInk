@@ -1,15 +1,18 @@
 <script>
-  import Heading from "../../lib/Heading.svelte";
-  import Image from "../../lib/Image.svelte";
-  import Paragraph from "../../lib/Paragraph.svelte";
-  import Button from "../../lib/Button.svelte";
-  let artists = $state([
+  import Button from "$lib/Button.svelte";
+  import Card from "$lib/Card.svelte";
+  import Heading from "$lib/Heading.svelte";
+  import Image from "$lib/Image.svelte";
+  import Paragraph from "$lib/Paragraph.svelte";
+  import { slamIn, tilt } from "$lib/p5";
+
+  const artists = [
     {
       name: "Toby",
       description: `lorem ipsum dolor sit amet consectetur adipiscing elit ducimus ex assumenda dolorem id qui est quibusdam sunt nisi dolore quo eum eu est sed illum et temporibus eos qui vel molestias anim sint voluptate in optio quibusdam labore magna assumenda commodo aliquip sunt cupiditate sunt harum et harum est est`,
       image: "/toby.jpg",
-      facebook: "https://www.facebook.com/profile.php?id=100085848969301",
       alias: "@toby.page.56",
+      facebook: "https://www.facebook.com/profile.php?id=100085848969301",
       instagram: "https://www.instagram.com/toby.page.56",
     },
     {
@@ -20,129 +23,141 @@
       facebook: "https://www.facebook.com/MonkwormInk",
       instagram: "",
     },
-  ]);
+  ];
 
   // implement instagram scraping to procure artist portfolios
+
+  /** @type {HTMLElement} */
+  let section;
+
+  $effect(() => {
+    const tweens = [...section.querySelectorAll(".description")].map((el, i) =>
+      slamIn(el, {
+        from: i % 2 === 0 ? "right" : "left",
+        scrollTrigger: { trigger: el, start: "top 85%" },
+      }),
+    );
+    return () => {
+      for (const tween of tweens) {
+        tween.scrollTrigger?.kill();
+        tween.kill();
+      }
+    };
+  });
 </script>
 
-<div id="artists">
-  {#each artists as artist, index}
-    <div class="artist">
-      <div class={`text ${index % 2 == 0 ? " first" : ""}`}>
-        <Heading>
-          {artist.name}
-        </Heading>
-        <Paragraph>{artist.description}</Paragraph>
-        <div class="portfolio">
-          <Button variant="reveal" href={artist.instagram || artist.facebook}
-            >portfolio</Button
-          >
+<section class="artists" bind:this={section}>
+  {#each artists as artist, i}
+    <article class="artist" class:flipped={i % 2 === 0}>
+      <div class="text">
+        <Heading>{artist.name}</Heading>
+        <div class="description">
+          <Card tilt={tilt(i)}>
+            <div class="body">
+              <Paragraph>{artist.description}</Paragraph>
+              <Button variant="reveal" href={artist.instagram || artist.facebook}>portfolio</Button>
+            </div>
+          </Card>
         </div>
       </div>
-      <div class="images">
-        <Image src={artist.image} alt={artist.name} classname={"base"} />
+      <div class="photo">
+        <Image src={artist.image} alt={artist.name} />
       </div>
-    </div>
+    </article>
   {/each}
-</div>
+</section>
 
 <style>
-  #artists {
-    position: relative;
-    display: flex;
-    flex-flow: column;
+  .artists {
     --gutter: clamp(1rem, 8vw, 10rem);
+    display: flex;
+    flex-direction: column;
     gap: var(--gutter);
     padding: var(--gutter);
-    box-sizing: border-box;
+  }
+
+  .artist {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gutter);
+  }
+
+  .text,
+  .photo {
+    flex: 1 1 20rem;
+    min-width: 0;
+  }
+
+  .flipped .text {
+    order: 1;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: clamp(1rem, 2.5vw, 2rem);
+
+    :global(p) {
+      margin: 0;
+      font-weight: 200;
+    }
+  }
+
+  .photo {
+    aspect-ratio: 5 / 4;
+  }
+
+  @media (max-width: 900px) {
+    .artists {
+      --gutter: clamp(1rem, 6vw, 3rem);
+    }
 
     .artist {
-      display: flex;
-      /* text and image stack once there's no room for both side by side */
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--gutter);
-      .text {
-        position: relative;
-        flex: 1 1 20rem;
-        min-width: 0;
+      flex-direction: column;
+      align-items: stretch;
+    }
 
-        p {
-          font-weight: 200;
-        }
+    .text,
+    .photo {
+      flex: none;
+      width: 100%;
+    }
 
-        .portfolio {
-          margin-top: 1rem;
-        }
-      }
+    .text {
+      order: 1;
+    }
 
-      .first {
-        order: 1;
-      }
-
-      .images {
-        position: relative;
-        flex: 1 1 20rem;
-        min-width: 0;
-        aspect-ratio: 5 / 4;
-
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
+    .photo {
+      max-width: 40rem;
+      margin: 0 auto;
     }
   }
 
-  /* tablet: one column, photo always above the bio instead of alternating */
-  @media (max-width: 900px) {
-    #artists {
-      --gutter: clamp(1rem, 6vw, 3rem);
-
-      .artist {
-        flex-direction: column;
-        align-items: stretch;
-
-        .text,
-        .images {
-          flex: none;
-          width: 100%;
-        }
-
-        .text,
-        .first {
-          order: 1;
-        }
-
-        .images {
-          order: 0;
-          max-width: 40rem;
-          margin: 0 auto;
-        }
-      }
-    }
-  }
-
-  /* phone: shrink the 32px body copy and use the full width */
   @media (max-width: 600px) {
-    #artists {
+    .artists {
       padding-inline: var(--page-pad);
+    }
 
-      .artist {
-        .text :global(h1) {
-          font-size: 2.2rem;
-        }
+    .text :global(h1) {
+      font-size: 2.2rem;
+    }
 
-        .text :global(p) {
-          font-size: 1.1rem;
-          line-height: 1.5;
-        }
+    .text :global(p) {
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
 
-        .images {
-          aspect-ratio: 4 / 5;
-        }
-      }
+    .photo {
+      aspect-ratio: 4 / 5;
     }
   }
 </style>

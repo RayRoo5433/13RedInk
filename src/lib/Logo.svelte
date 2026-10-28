@@ -1,6 +1,9 @@
 <script>
   import { onMount } from "svelte";
-  import gsap from "gsap";
+  import { gsap } from "$lib/gsap";
+
+  /** @type {{ onshow?: () => void }} */
+  let { onshow } = $props();
 
   export const glyphs = [
     {
@@ -37,61 +40,61 @@
     },
   ];
 
-  let letters = [];
-  let fills = [],
-    outlines = [],
-    shadows = [];
-  // how far the ink layer sits down and right of each letter, in viewBox units
   const DROP = 20;
+  // fills the hatch gaps without changing the letter's outline
+  const CLOSE = 9;
+
+  /** @type {SVGGElement[]} */
+  let letters = [];
+  /** @type {SVGPathElement[]} */
+  let fills = [];
+  /** @type {SVGPathElement[]} */
+  let outlines = [];
+  /** @type {SVGPathElement[]} */
+  let shadows = [];
+  /** @type {SVGPathElement[]} */
+  let backings = [];
 
   onMount(() => {
     const stagger = { amount: 0.5, from: "start", ease: "power1.out" };
-    const tl = gsap.timeline();
 
-    tl.from(letters, {
-      opacity: 0,
-      y: 270,
-      duration: 1.3,
-      ease: "expo.out",
-      stagger,
-    });
+    outlines.forEach((p) => gsap.set(p, { strokeDasharray: p.getTotalLength() }));
 
-    // stencil pass: outline draws on, ink fills, outline lifts off
-    outlines.forEach((p) =>
-      gsap.set(p, { strokeDasharray: p.getTotalLength() }),
-    );
-    tl.fromTo(
-      outlines,
-      { strokeDashoffset: (i, el) => el.getTotalLength() },
-      { strokeDashoffset: 0, duration: 1.3, ease: "power1.inOut", stagger },
-      0,
-    );
-    tl.from(fills, { opacity: 0, duration: 0.78, stagger }, 0.91);
-    tl.to(outlines, { opacity: 0, duration: 0.4, stagger }, 1.56);
-    // once the red is in, the ink copy underneath slides out to its offset,
-    // the same hard drop as the cards and buttons
-    tl.fromTo(
-      shadows,
-      { x: 0, y: 0, opacity: 0 },
-      { x: DROP, y: DROP, opacity: 1, duration: 0.5, ease: "back.out(2)", stagger },
-      1.5,
-    );
+    const tl = gsap
+      .timeline()
+      .from(letters, { opacity: 0, y: 270, duration: 1.3, ease: "expo.out", stagger })
+      .fromTo(
+        outlines,
+        { strokeDashoffset: (/** @type {number} */ _, /** @type {SVGPathElement} */ el) => el.getTotalLength() },
+        { strokeDashoffset: 0, duration: 1.3, ease: "power1.inOut", stagger },
+        0,
+      )
+      .from(fills, { opacity: 0, duration: 0.78, stagger }, 0.91)
+      .from(backings, { opacity: 0, duration: 0.78, stagger }, 0.91)
+      .to(outlines, { opacity: 0, duration: 0.4, stagger }, 1.56)
+      .fromTo(
+        shadows,
+        { x: 0, y: 0, opacity: 0 },
+        { x: DROP, y: DROP, opacity: 1, duration: 0.5, ease: "back.out(2)", stagger },
+        1.5,
+      );
 
-    // the 13 flickers every few seconds
-    const thirteen = letters.filter((_, i) =>
-      ["1", "3"].includes(glyphs[i].name),
-    );
+    const thirteen = letters.filter((_, i) => ["1", "3"].includes(glyphs[i].name));
+    /** @type {gsap.core.Tween} */
     let next;
-    const blink = () => {
+    const flicker = () => {
       gsap
         .timeline()
         .to(thirteen, { opacity: 0.15, duration: 0.05, ease: "none" })
         .to(thirteen, { opacity: 1, duration: 0.05, ease: "none" })
         .to(thirteen, { opacity: 0.3, duration: 0.04, ease: "none" }, "+=0.08")
         .to(thirteen, { opacity: 1, duration: 0.12, ease: "none" });
-      next = gsap.delayedCall(gsap.utils.random(3, 7), blink);
+      next = gsap.delayedCall(gsap.utils.random(3, 7), flicker);
     };
-    tl.call(() => (next = gsap.delayedCall(1.5, blink)));
+    tl.call(() => {
+      onshow?.();
+      next = gsap.delayedCall(1.5, flicker);
+    });
 
     return () => {
       tl.kill();
@@ -100,13 +103,18 @@
   });
 </script>
 
-<!-- viewBox grown by DROP so the ink layer under the last letters isn't cut off -->
 <svg viewBox="60 143 {1632 + DROP} {1511 + DROP}" role="img" aria-label="Red 13 Ink">
+  <defs>
+    <filter id="logo-solid">
+      <feMorphology operator="dilate" radius={CLOSE} />
+      <feMorphology operator="erode" radius={CLOSE} />
+    </filter>
+  </defs>
   {#each glyphs as g, i}
     <g bind:this={letters[i]}>
-      <!-- solid ink copy of the letter, offset underneath it -->
-      <path bind:this={shadows[i]} d={g.d} fill="var(--ink)" />
-      <path bind:this={fills[i]} d={g.d} fill="var(--primary)" />
+      <path bind:this={shadows[i]} class="shadow" d={g.d} />
+      <path bind:this={backings[i]} class="backing" d={g.d} />
+      <path bind:this={fills[i]} d={g.d} fill="var(--red)" />
       <path
         bind:this={outlines[i]}
         d={g.d}
@@ -120,8 +128,19 @@
 </svg>
 
 <style>
-  /* fill the parent; the default preserveAspectRatio (xMidYMid meet)
-     scales the logo to fit and centres it both ways */
+  .shadow,
+  .backing {
+    filter: url(#logo-solid);
+  }
+
+  .shadow {
+    fill: var(--ink);
+  }
+
+  .backing {
+    fill: var(--cream);
+  }
+
   svg {
     display: block;
     width: 100%;

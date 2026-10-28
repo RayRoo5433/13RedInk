@@ -3,8 +3,12 @@ import { APIFY_API_TOKEN } from "$env/static/private";
 
 export async function GET() {
   const TOKEN = APIFY_API_TOKEN;
-  const google = await fetch(`https://api.apify.com/v2/actors/Xb8osYTtOjlsgI6k9/runs/last/dataset/items?token=${TOKEN}`);
-  const facebook = await fetch(`https://api.apify.com/v2/actors/dX3d80hsNMilEwjXG/runs/last/dataset/items?token=${TOKEN}`);
+  const google = await fetch(
+    `https://api.apify.com/v2/actors/Xb8osYTtOjlsgI6k9/runs/last/dataset/items?token=${TOKEN}`,
+  );
+  const facebook = await fetch(
+    `https://api.apify.com/v2/actors/dX3d80hsNMilEwjXG/runs/last/dataset/items?token=${TOKEN}`,
+  );
 
   let googleData = await google.json();
   let facebookData = await facebook.json();
@@ -34,5 +38,8 @@ export async function GET() {
     };
   });
   // @ts-ignore
-  return json([...googleData.filter((x) => x.rating >= 4), ...facebookData.filter((x) => x.rating)]);
+  return json([
+    ...googleData.filter((x) => x.rating >= 4),
+    ...facebookData.filter((x) => x.rating),
+  ]);
 }

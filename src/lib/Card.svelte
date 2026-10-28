@@ -1,26 +1,9 @@
 <script>
-  // cream panel with a thick ink outline and a hard drop shadow, the base for
-  // anything boxed on the site. tilt rests it a little off square (degrees);
-  // interactive gives it the skewed hover jolt
-  let {
-    children,
-    tilt = 0,
-    interactive = false,
-    element = $bindable(),
-    ...rest
-  } = $props();
+  let { children, tilt = 0, interactive = false, ...rest } = $props();
 </script>
 
-<!-- the shadow is its own layer under the face so on hover it can lean by a
-     different amount to the face -->
-<div
-  bind:this={element}
-  class="card"
-  class:interactive
-  style:--tilt="{tilt}deg"
-  {...rest}
->
-  <div class="shadow" aria-hidden="true"></div>
+<div class="card" class:interactive style:--tilt="{tilt}deg" {...rest}>
+  <div class="shadow"></div>
   <div class="face">
     {@render children()}
   </div>
@@ -29,7 +12,6 @@
 <style>
   .card {
     position: relative;
-    box-sizing: border-box;
     color: var(--ink);
     transform: rotate(var(--tilt));
   }
@@ -47,17 +29,13 @@
     height: 100%;
     background-color: var(--cream);
     border: 3px solid var(--ink);
-    /* own stacking layer, so things inside with negative z-index (like the
-       Button's shadow) paint on the face rather than under it */
     isolation: isolate;
   }
 
-  /* the face leans forward and lifts off its shadow, which leans less so
-     the two separate, overshooting a touch on the way */
   .interactive {
     --spring: 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
-    transition: transform var(--spring);
 
+    &,
     .face,
     .shadow {
       transition: transform var(--spring);
@@ -79,8 +57,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .interactive,
-    .interactive .face,
-    .interactive .shadow {
+    .interactive * {
       transition: none;
     }
   }

@@ -1,126 +1,147 @@
 <script>
+  import Card from "$lib/Card.svelte";
   import Heading from "$lib/Heading.svelte";
   import Image from "$lib/Image.svelte";
   import Paragraph from "$lib/Paragraph.svelte";
+  import { slamIn, tilt } from "$lib/p5";
+
+  /** @type {HTMLElement} */
+  let description;
+
+  $effect(() => {
+    const tween = slamIn(description, {
+      scrollTrigger: { trigger: description, start: "top 85%" },
+    });
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  });
 </script>
 
-<div id="about">
+<section class="about">
   <div class="text">
     <Heading>Who are we?</Heading>
-    <Paragraph>
-      lorem ipsum dolor sit amet consectetur adipiscing elit soluta id et
-      pariatur repellendus et nostrud ea et est ex dolor nulla ut dolor qui
-      excepturi ut molestias consequat quas eos id pariatur dolorum qui sunt
-      accusamus eum cum vel cillum qui ipsum et voluptas sunt eum rerum
-      accusamus qui cillum
-    </Paragraph>
-    <div class="socials"></div>
+    <div class="description" bind:this={description}>
+      <Card tilt={tilt(0)}>
+        <div class="body">
+          <Paragraph>
+            lorem ipsum dolor sit amet consectetur adipiscing elit soluta id et
+            pariatur repellendus et nostrud ea et est ex dolor nulla ut dolor qui
+            excepturi ut molestias consequat quas eos id pariatur dolorum qui sunt
+            accusamus eum cum vel cillum qui ipsum et voluptas sunt eum rerum
+            accusamus qui cillum
+          </Paragraph>
+        </div>
+      </Card>
+    </div>
   </div>
+
   <div class="images">
-    <!-- the wrappers place the pair; Image fills whichever box it's in -->
     <div class="base"><Image src="/base.jpg" /></div>
     <div class="top"><Image src="/top.jpg" delay={0.3} /></div>
   </div>
-</div>
+</section>
 
 <style>
-  div#about {
-    position: relative;
+  .about {
+    --gutter: clamp(1rem, 8vw, 10rem);
     display: flex;
     flex-wrap: wrap;
-    --gutter: clamp(1rem, 8vw, 10rem);
+    align-items: center;
     gap: var(--gutter);
     padding: var(--gutter);
-    box-sizing: border-box;
-    align-items: center;
+  }
 
-    .text {
-      position: relative;
-      flex: 1 1 20rem;
-      min-width: 0;
+  .text,
+  .images {
+    position: relative;
+    flex: 1 1 20rem;
+    min-width: 0;
+  }
 
-      :global(h1) {
-        font-size: clamp(2.2rem, 8vw, 8rem);
-        font-weight: 600;
-      }
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 
-      :global(p) {
-        font-size: clamp(1.1rem, 3vw, 3rem);
-        font-weight: 200;
-      }
+    :global(h1) {
+      font-size: clamp(2.2rem, 8vw, 8rem);
+    }
+
+    :global(p) {
+      margin: 0;
+      font-size: clamp(1.1rem, 3vw, 3rem);
+      font-weight: 200;
+    }
+  }
+
+  .body {
+    padding: clamp(1rem, 2.5vw, 2rem);
+  }
+
+  .images {
+    aspect-ratio: 5 / 4;
+  }
+
+  .base,
+  .top {
+    position: absolute;
+  }
+
+  .base {
+    left: 0;
+    bottom: 0;
+    width: 68%;
+    aspect-ratio: 4 / 3;
+  }
+
+  .top {
+    right: 0;
+    top: 0;
+    z-index: 1;
+    width: 50%;
+    aspect-ratio: 4 / 5;
+  }
+
+  @media (max-width: 900px) {
+    .about {
+      --gutter: clamp(1rem, 6vw, 3rem);
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .text,
+    .images {
+      flex: none;
+      width: 100%;
     }
 
     .images {
-      position: relative;
-      flex: 1 1 20rem;
-      min-width: 0;
-      aspect-ratio: 5 / 4;
-
-      .base,
-      .top {
-        position: absolute;
-      }
-      .base {
-        left: 0;
-        bottom: 0;
-        width: 68%;
-        aspect-ratio: 4 / 3;
-      }
-      .top {
-        right: 0;
-        top: 0;
-        width: 50%;
-        aspect-ratio: 4 / 5;
-        z-index: 1;
-      }
+      max-width: 40rem;
+      margin: 0 auto;
     }
   }
 
-  /* tablet: stack text over the images and let both use the full width */
-  @media (max-width: 900px) {
-    div#about {
-      flex-direction: column;
-      align-items: stretch;
-      --gutter: clamp(1rem, 6vw, 3rem);
-
-      .text,
-      .images {
-        flex: none;
-        width: 100%;
-      }
-
-      .images {
-        max-width: 40rem;
-        margin: 0 auto;
-      }
-    }
-  }
-
-  /* phone: the body's 32px copy is too big for a narrow column */
   @media (max-width: 600px) {
-    div#about {
+    .about {
       padding-inline: var(--page-pad);
+    }
 
-      .text :global(h1) {
-        font-size: 2.2rem;
-      }
+    .text :global(p) {
+      line-height: 1.5;
+    }
 
-      .text :global(p) {
-        font-size: 1.1rem;
-        line-height: 1.5;
-      }
+    .images {
+      aspect-ratio: 1;
+    }
 
-      /* taller box so the overlapping pair doesn't get squashed */
-      .images {
-        aspect-ratio: 1 / 1;
+    .base {
+      width: 75%;
+    }
 
-        .base {
-          width: 75%;
-        }
-        .top {
-          width: 55%;
-        }
-      }
+    .top {
+      width: 55%;
     }
   }
 </style>

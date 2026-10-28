@@ -1,8 +1,9 @@
 <script>
-  import Heading from "$lib/Heading.svelte";
   import Card from "$lib/Card.svelte";
+  import Heading from "$lib/Heading.svelte";
   import { slamIn, tilt } from "$lib/p5";
-  import { addressLines, address, hours } from "$lib/studio";
+  import { address, addressLines, hours } from "$lib/studio";
+
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=16&output=embed`;
 
   const links = [
@@ -18,16 +19,6 @@
     },
     { label: "Facebook", value: "Red 13 Ink", href: "https://facebook.com/" },
   ];
-
-  const dayNames = {
-    Mon: "Monday",
-    Tue: "Tuesday",
-    Wed: "Wednesday",
-    Thu: "Thursday",
-    Fri: "Friday",
-    Sat: "Saturday",
-    Sun: "Sunday",
-  };
 
   /** @type {HTMLElement} */
   let top;
@@ -54,7 +45,7 @@
   });
 </script>
 
-<section class="visit">
+<section class="contact">
   <div class="top" bind:this={top}>
     <div class="details">
       <div class="title"><Heading>Come say hello</Heading></div>
@@ -98,7 +89,7 @@
             <tbody>
               {#each hours as h}
                 <tr class:closed={!h.open}>
-                  <th scope="row">{dayNames[h.day]}</th>
+                  <th scope="row">{h.day}</th>
                   {#if h.open}
                     <td>{h.open}</td>
                     <td>{h.close}</td>
@@ -116,8 +107,7 @@
 </section>
 
 <style>
-  /* fills the scroll area at desktop so the whole page is in view at once */
-  .visit {
+  .contact {
     box-sizing: border-box;
     height: 100%;
     padding: clamp(1.5rem, 4vw, 3rem) var(--page-pad);
@@ -128,8 +118,6 @@
     font-size: clamp(2.5rem, 5vw, 4.5rem);
   }
 
-  /* heading, details and map down the left half, the hours card filling the
-     right half top to bottom */
   .top {
     display: grid;
     height: 100%;
@@ -145,7 +133,6 @@
     min-height: 0;
   }
 
-  /* the map takes whatever height the left column has left */
   .map-slot {
     flex: 1;
     min-height: 12rem;
@@ -210,7 +197,6 @@
       text-align: center;
     }
 
-    /* the rows share out whatever height the card has */
     table {
       flex: 1;
       width: 100%;
@@ -268,10 +254,8 @@
     mix-blend-mode: multiply;
   }
 
-  /* tablet and down: one column at natural height, the hours card under the
-     map */
   @media (max-width: 900px) {
-    .visit,
+    .contact,
     .top {
       height: auto;
     }
