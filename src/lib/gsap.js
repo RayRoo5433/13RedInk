@@ -18,13 +18,18 @@ export const reducedMotion = () =>
 const intros = new Set();
 
 /**
- * Registers a page's intro animations so they can be played backwards on leave.
+ * Registers intro animations so they play backwards when leaving the page.
+ * Returns a cleanup that forgets and kills them.
  * @param {gsap.core.Animation[]} animations
  */
 export function trackIntro(...animations) {
   for (const animation of animations) intros.add(animation);
   return () => {
-    for (const animation of animations) intros.delete(animation);
+    for (const animation of animations) {
+      intros.delete(animation);
+      animation.scrollTrigger?.kill();
+      animation.kill();
+    }
   };
 }
 

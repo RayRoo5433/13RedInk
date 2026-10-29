@@ -1,7 +1,7 @@
 <script>
   import { gsap, trackIntro } from "$lib/gsap";
 
-  let { children, style = "" } = $props();
+  let { children, style = "", start = "top 85%" } = $props();
 
   /** @type {HTMLElement} */
   let text;
@@ -11,16 +11,10 @@
       yPercent: 110,
       duration: 1.1,
       ease: "hop",
-      scrollTrigger: { trigger: text.parentElement, start: "top 85%" },
+      scrollTrigger: { trigger: text.parentElement, start },
     });
 
-    const untrack = trackIntro(tween);
-
-    return () => {
-      untrack();
-      tween.scrollTrigger?.kill();
-      tween.kill();
-    };
+    return trackIntro(tween);
   });
 </script>
 

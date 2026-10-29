@@ -41,7 +41,7 @@
   ];
 
   const DROP = 20;
-  // fills the hatch gaps without changing the letter's outline
+  // fills the hatch gaps in the backing and shadow without changing their outline
   const CLOSE = 9;
 
   /** @type {SVGGElement[]} */
@@ -58,19 +58,20 @@
   onMount(() => {
     const stagger = { amount: 0.5, from: "start", ease: "power1.out" };
 
-    outlines.forEach((p) => gsap.set(p, { strokeDasharray: p.getTotalLength() }));
+    const lengths = outlines.map((path) => path.getTotalLength());
+    gsap.set(outlines, { strokeDasharray: (/** @type {number} */ i) => lengths[i] });
 
     const tl = gsap
       .timeline()
       .from(letters, { opacity: 0, y: 270, duration: 1.3, ease: "expo.out", stagger })
       .fromTo(
         outlines,
-        { strokeDashoffset: (/** @type {number} */ _, /** @type {SVGPathElement} */ el) => el.getTotalLength() },
+        { strokeDashoffset: (/** @type {number} */ i) => lengths[i] },
         { strokeDashoffset: 0, duration: 1.3, ease: "power1.inOut", stagger },
         0,
       )
       .from(fills, { opacity: 0, duration: 0.78, stagger }, 0.91)
-      .from(backings, { opacity: 0, duration: 0.78, stagger }, 0.91)
+      .from(backings, { opacity: 0, duration: 0.78, stagger }, "<")
       .to(outlines, { opacity: 0, duration: 0.4, stagger }, 1.56)
       .fromTo(
         shadows,
@@ -96,11 +97,10 @@
       next = gsap.delayedCall(1.5, flicker);
     });
 
-    const untrack = trackIntro(tl);
+    const stopIntro = trackIntro(tl);
 
     return () => {
-      untrack();
-      tl.kill();
+      stopIntro();
       next?.kill();
     };
   });

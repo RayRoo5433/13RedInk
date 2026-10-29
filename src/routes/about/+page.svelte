@@ -13,13 +13,7 @@
     const tween = slamIn(description, {
       scrollTrigger: { trigger: description, start: "top 85%" },
     });
-    const untrack = trackIntro(tween);
-
-    return () => {
-      untrack();
-      tween.scrollTrigger?.kill();
-      tween.kill();
-    };
+    return trackIntro(tween);
   });
 </script>
 

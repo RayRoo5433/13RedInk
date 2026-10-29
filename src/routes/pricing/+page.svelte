@@ -4,7 +4,7 @@
   import Heading from "$lib/Heading.svelte";
   import Paragraph from "$lib/Paragraph.svelte";
   import { gsap, trackIntro } from "$lib/gsap";
-  import { slamIn, tilt } from "$lib/p5";
+  import { slideIn, tilt } from "$lib/p5";
 
   const plans = [
     { name: "Shop minimum", price: "£50", unit: "per tattoo", blurb: "Small, simple pieces." },
@@ -14,29 +14,31 @@
   ];
 
   /** @type {HTMLElement} */
+  let backdrop;
+  /** @type {HTMLElement} */
   let grid;
 
   $effect(() => {
     const tl = gsap
       .timeline({ scrollTrigger: { trigger: grid, start: "top 85%" } })
-      .add(slamIn(grid.querySelectorAll(".slot")))
+      .fromTo(
+        backdrop,
+        { scaleX: 0, skewX: -25 },
+        { scaleX: 1, skewX: 0, duration: 0.8, ease: "expo.out" },
+      )
+      .add(slideIn(grid.querySelectorAll(".slot")), "-=0.5")
       .from(
         grid.querySelectorAll(".rise"),
         { yPercent: 110, duration: 0.8, ease: "power3.out", stagger: 0.05 },
-        0.4,
+        "-=0.6",
       );
 
-    const untrack = trackIntro(tl);
-
-    return () => {
-      untrack();
-      tl.scrollTrigger?.kill();
-      tl.kill();
-    };
+    return trackIntro(tl);
   });
 </script>
 
 <section class="pricing">
+  <div class="backdrop" bind:this={backdrop}></div>
   <div class="grid" bind:this={grid}>
     {#each plans as plan, i}
       <div class="slot">
@@ -62,14 +64,33 @@
 
 <style>
   .pricing {
-    padding-inline: var(--page-pad);
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 100%;
+    padding: clamp(2rem, 5vw, 4rem) var(--page-pad);
+  }
+
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--red);
+    transform: scaleX(0);
+    transform-origin: left center;
   }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    flex: 1;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
     gap: clamp(1rem, 2vw, 2rem);
-    padding: clamp(2rem, 10vw, 10rem) 0;
+  }
+
+  .slot {
+    min-height: clamp(24rem, 60vh, 34rem);
   }
 
   .plan {
@@ -78,7 +99,7 @@
     justify-content: space-between;
     box-sizing: border-box;
     height: 100%;
-    padding: 16px;
+    padding: clamp(16px, 2vw, 28px);
 
     :global(h1) {
       font-size: clamp(2.2rem, 4vw, 5rem);

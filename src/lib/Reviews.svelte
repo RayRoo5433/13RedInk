@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import moment from "moment";
   import Card from "./Card.svelte";
+  import Heading from "./Heading.svelte";
   import Rating from "./Rating.svelte";
   import { gsap, reducedMotion, trackIntro } from "$lib/gsap";
   import { dropIn, primeDrop, tilt } from "$lib/p5";
@@ -17,6 +18,7 @@
   let band;
   /** @type {HTMLElement} */
   let row;
+  let opened = $state(false);
 
   onMount(async () => {
     gsap.from(line, {
@@ -114,13 +116,13 @@
     const intro = gsap
       .timeline({ onComplete: () => !reducedMotion() && marquee.play() })
       .from(band, { height: 0, duration: 0.8, ease: "power3.inOut", clearProps: "height" })
+      .call(() => (opened = true))
       .add(dropIn(visible), "-=0.15");
 
-    const untrack = trackIntro(intro);
+    const stopIntro = trackIntro(intro);
 
     return () => {
-      untrack();
-      intro.kill();
+      stopIntro();
       marquee.kill();
       observer.disconnect();
       row.removeEventListener("mouseenter", slowDown);
@@ -131,6 +133,11 @@
 
 <section>
   <hr bind:this={line} />
+  {#if opened}
+    <div class="title">
+      <Heading start="top bottom">Word on the street</Heading>
+    </div>
+  {/if}
   <div class="band" bind:this={band}>
     <div class="row" bind:this={row}>
       {#each reviews as review, i}
@@ -158,6 +165,25 @@
   .band {
     overflow: hidden;
     background-color: var(--red);
+  }
+
+  section {
+    position: relative;
+  }
+
+  /* sits across the line on top of the band, so it adds no height */
+  .title {
+    position: absolute;
+    top: 0;
+    left: var(--page-pad);
+    z-index: 3;
+    transform: translateY(-50%);
+    pointer-events: none;
+
+    :global(h1) {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      color: var(--cream);
+    }
   }
 
   .row {

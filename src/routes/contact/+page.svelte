@@ -37,15 +37,7 @@
       }),
     ];
 
-    const untrack = trackIntro(...tweens);
-
-    return () => {
-      untrack();
-      for (const tween of tweens) {
-        tween.scrollTrigger?.kill();
-        tween.kill();
-      }
-    };
+    return trackIntro(...tweens);
   });
 </script>
 

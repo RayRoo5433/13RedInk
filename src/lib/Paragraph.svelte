@@ -1,7 +1,7 @@
 <script>
   import { gsap, SplitText, trackIntro } from "$lib/gsap";
 
-  let { children, style = "" } = $props();
+  let { children, style = "", start = "top 85%" } = $props();
 
   /** @type {HTMLElement} */
   let text;
@@ -16,15 +16,13 @@
       ease: "power3.out",
       stagger: 0.05,
       delay: 0.25,
-      scrollTrigger: { trigger: text, start: "top 85%" },
+      scrollTrigger: { trigger: text, start },
     });
 
-    const untrack = trackIntro(tween);
+    const stopIntro = trackIntro(tween);
 
     return () => {
-      untrack();
-      tween.scrollTrigger?.kill();
-      tween.kill();
+      stopIntro();
       split.revert();
     };
   });

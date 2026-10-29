@@ -45,13 +45,7 @@
         "image",
       );
 
-    const untrack = trackIntro(tl);
-
-    return () => {
-      untrack();
-      tl.scrollTrigger?.kill();
-      tl.kill();
-    };
+    return trackIntro(tl);
   });
 </script>
 

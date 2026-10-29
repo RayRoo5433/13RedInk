@@ -2,8 +2,8 @@
   import { goto } from "$app/navigation";
   import { gsap, reducedMotion, trackIntro } from "$lib/gsap";
 
-  /** @type {{ children: any, href?: string, onclick?: (e: MouseEvent) => void, variant?: "default" | "reveal", [key: string]: any }} */
-  let { children, href, onclick, variant = "default", ...rest } = $props();
+  /** @type {{ children: any, href?: string, onclick?: (e: MouseEvent) => void, variant?: "default" | "reveal", tone?: "red" | "cream", [key: string]: any }} */
+  let { children, href, onclick, variant = "default", tone = "red", ...rest } = $props();
 
   const reveal = variant === "reveal";
   const SHADOW = 5;
@@ -81,14 +81,12 @@
       .from(label, { yPercent: 110, duration: 0.8, ease: "hop" }, "-=0.3")
       .from(shadow, { x: 0, y: 0, opacity: 0, duration: 0.4, ease: "power3.out" });
 
-    const untrack = trackIntro(intro);
+    const stopIntro = trackIntro(intro);
 
     return () => {
-      untrack();
+      stopIntro();
       observer.disconnect();
       hover.kill();
-      intro.scrollTrigger?.kill();
-      intro.kill();
     };
   });
 
@@ -121,6 +119,7 @@
 <button
   bind:this={button}
   class:reveal
+  class:cream={tone === "cream"}
   class:drawn
   onclick={handleClick}
   onmouseenter={show}
@@ -159,6 +158,14 @@
     font-size: 1.25rem;
     font-weight: 800;
     cursor: pointer;
+
+    &.cream {
+      color: var(--ink);
+
+      .fill {
+        background-color: var(--cream);
+      }
+    }
 
     &.reveal:not(.drawn) .fill {
       transform: scaleX(0);
