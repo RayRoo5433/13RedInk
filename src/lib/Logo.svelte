@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { gsap } from "$lib/gsap";
+  import { gsap, trackIntro } from "$lib/gsap";
 
   /** @type {{ onshow?: () => void }} */
   let { onshow } = $props();
@@ -96,7 +96,10 @@
       next = gsap.delayedCall(1.5, flicker);
     });
 
+    const untrack = trackIntro(tl);
+
     return () => {
+      untrack();
       tl.kill();
       next?.kill();
     };

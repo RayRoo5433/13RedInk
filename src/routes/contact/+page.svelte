@@ -1,6 +1,7 @@
 <script>
   import Card from "$lib/Card.svelte";
   import Heading from "$lib/Heading.svelte";
+  import { trackIntro } from "$lib/gsap";
   import { slamIn, tilt } from "$lib/p5";
   import { address, addressLines, hours } from "$lib/studio";
 
@@ -36,7 +37,10 @@
       }),
     ];
 
+    const untrack = trackIntro(...tweens);
+
     return () => {
+      untrack();
       for (const tween of tweens) {
         tween.scrollTrigger?.kill();
         tween.kill();

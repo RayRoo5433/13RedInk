@@ -1,5 +1,5 @@
 <script>
-  import { gsap } from "$lib/gsap";
+  import { gsap, trackIntro } from "$lib/gsap";
 
   let { children, style = "" } = $props();
 
@@ -14,7 +14,10 @@
       scrollTrigger: { trigger: text.parentElement, start: "top 85%" },
     });
 
+    const untrack = trackIntro(tween);
+
     return () => {
+      untrack();
       tween.scrollTrigger?.kill();
       tween.kill();
     };

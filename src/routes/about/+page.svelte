@@ -3,6 +3,7 @@
   import Heading from "$lib/Heading.svelte";
   import Image from "$lib/Image.svelte";
   import Paragraph from "$lib/Paragraph.svelte";
+  import { trackIntro } from "$lib/gsap";
   import { slamIn, tilt } from "$lib/p5";
 
   /** @type {HTMLElement} */
@@ -12,7 +13,10 @@
     const tween = slamIn(description, {
       scrollTrigger: { trigger: description, start: "top 85%" },
     });
+    const untrack = trackIntro(tween);
+
     return () => {
+      untrack();
       tween.scrollTrigger?.kill();
       tween.kill();
     };

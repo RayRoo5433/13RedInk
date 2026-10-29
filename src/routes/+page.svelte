@@ -2,20 +2,45 @@
   // film grain can maybe be added to the image. I'm picturing a really nice Gothic Font used with Red exclusively in Red...
   import Logo from "$lib/Logo.svelte";
   import Reviews from "$lib/Reviews.svelte";
+  import { CustomEase, gsap, reducedMotion, trackIntro } from "$lib/gsap";
 
-  let logoShown = $state(false);
+  /** @type {HTMLElement} */
+  let burst;
+  /** @type {() => void} */
+  let untrack;
+
+  function showHalo() {
+    if (untrack) return;
+    const tween = gsap.fromTo(
+      burst,
+      { autoAlpha: 0, scale: 0.7, rotation: -20 },
+      {
+        autoAlpha: 1,
+        scale: 1,
+        rotation: 0,
+        duration: reducedMotion() ? 0 : 6,
+        ease: CustomEase.create("burst", "M0,0 C0.2,0.8 0.2,1 1,1"),
+      },
+    );
+    untrack = trackIntro(tween);
+  }
+
+  $effect(() => {
+    gsap.set(burst, { xPercent: -50, yPercent: -50 });
+    return () => untrack?.();
+  });
 </script>
 
 <div class="hero">
-  <div class="halo" class:on={logoShown} aria-hidden="true">
-    <div class="burst">
+  <div class="halo" aria-hidden="true">
+    <div class="burst" bind:this={burst}>
       <div class="rays wide"></div>
       <!-- <div class="rays fine"></div> -->
     </div>
   </div>
 
   <div class="logo">
-    <Logo onshow={() => (logoShown = true)} />
+    <Logo onshow={showHalo} />
   </div>
 
   <div class="reviews">
@@ -60,19 +85,13 @@
     top: 50%;
     width: max(130vmin, 56rem);
     aspect-ratio: 1;
-    transform: translate(-50%, -50%);
     mask-image: radial-gradient(
       circle,
       transparent 0 15%,
       #000 15.5% 30%,
       transparent 55%
     );
-    opacity: 0;
-  }
-
-  .on .burst {
-    opacity: 1;
-    animation: burst-in 6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    visibility: hidden;
   }
 
   .rays {
@@ -99,13 +118,6 @@
     animation: spin 240s linear infinite reverse;
   }
 
-  @keyframes burst-in {
-    from {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.7) rotate(-20deg);
-    }
-  }
-
   @keyframes spin {
     to {
       transform: rotate(360deg);
@@ -113,7 +125,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .on .burst,
     .rays {
       animation: none;
     }

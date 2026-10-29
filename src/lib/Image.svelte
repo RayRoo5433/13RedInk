@@ -1,5 +1,5 @@
 <script>
-  import { gsap } from "$lib/gsap";
+  import { gsap, trackIntro } from "$lib/gsap";
 
   let { src, alt = "", delay = 0 } = $props();
 
@@ -13,26 +13,42 @@
   let shadow;
 
   $effect(() => {
+    // the shadow opens from its centre (width, then height), then the image wipes up over it
     const tl = gsap
       .timeline({
         scrollTrigger: { trigger: frame, start: "top 85%" },
         defaults: { ease: "hop" },
         delay,
       })
-      .to(frame, {
-        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-        duration: 1.4,
-      })
-      .fromTo(img, { scale: 1.4 }, { scale: 1, duration: 2.2 }, 0)
+      .fromTo(
+        shadow,
+        { clipPath: "inset(49.25% 50% 49.25% 50%)" },
+        { clipPath: "inset(49.25% 0% 49.25% 0%)", duration: 0.6, ease: "power2.inOut" },
+      )
+      .fromTo(
+        shadow,
+        { clipPath: "inset(49.25% 0% 49.25% 0%)" },
+        {
+          clipPath: "inset(0% 0% 0% 0%)",
+          duration: 0.6,
+          ease: "power2.inOut",
+          immediateRender: false,
+        },
+      )
+      .addLabel("image")
+      .to(frame, { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)", duration: 1.4 }, "image")
+      .fromTo(img, { scale: 1.4 }, { scale: 1, duration: 2.2 }, "image")
       .fromTo(
         root,
         { skewX: -12, rotation: -3 },
         { skewX: 0, rotation: 0, duration: 1.4, ease: "expo.out" },
-        0,
-      )
-      .fromTo(shadow, { x: 0, y: 0 }, { x: 9, y: 9, duration: 0.4, ease: "power3.out" }, 1.2);
+        "image",
+      );
+
+    const untrack = trackIntro(tl);
 
     return () => {
+      untrack();
       tl.scrollTrigger?.kill();
       tl.kill();
     };
@@ -57,6 +73,8 @@
     position: absolute;
     inset: 0;
     background-color: var(--ink);
+    transform: translate(9px, 9px);
+    clip-path: inset(49.25% 50% 49.25% 50%);
   }
 
   .frame {

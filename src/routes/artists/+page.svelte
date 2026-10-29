@@ -4,6 +4,7 @@
   import Heading from "$lib/Heading.svelte";
   import Image from "$lib/Image.svelte";
   import Paragraph from "$lib/Paragraph.svelte";
+  import { trackIntro } from "$lib/gsap";
   import { slamIn, tilt } from "$lib/p5";
 
   const artists = [
@@ -37,7 +38,10 @@
         scrollTrigger: { trigger: el, start: "top 85%" },
       }),
     );
+    const untrack = trackIntro(...tweens);
+
     return () => {
+      untrack();
       for (const tween of tweens) {
         tween.scrollTrigger?.kill();
         tween.kill();

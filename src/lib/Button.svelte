@@ -1,6 +1,6 @@
 <script>
   import { goto } from "$app/navigation";
-  import { gsap, reducedMotion } from "$lib/gsap";
+  import { gsap, reducedMotion, trackIntro } from "$lib/gsap";
 
   /** @type {{ children: any, href?: string, onclick?: (e: MouseEvent) => void, variant?: "default" | "reveal", [key: string]: any }} */
   let { children, href, onclick, variant = "default", ...rest } = $props();
@@ -31,8 +31,8 @@
     const spring = { duration: reducedMotion() ? 0 : 0.3, ease: "back.out(3)" };
     hover = gsap
       .timeline({ paused: true })
-      .to(shadow, { x: SHADOW + LIFT, y: SHADOW + LIFT, skewX: 12, ...spring })
-      .to(mask, { skewX: -10, ...spring }, 0);
+      .to([fill, mask], { x: -LIFT, y: -LIFT, skewX: -5, ...spring })
+      .to(shadow, { x: SHADOW + LIFT, y: SHADOW + LIFT, skewX: -2, ...spring }, 0);
 
     if (!reveal) return () => hover.kill();
 
@@ -72,16 +72,19 @@
         { strokeDasharray: "50 50", duration: 1.4, ease: "power2.inOut" },
       )
       .call(() => (drawn = true))
-      .set(outline, { autoAlpha: 0 })
       .fromTo(
         fill,
         { scaleX: 0, skewX: -25 },
         { scaleX: 1, skewX: 0, duration: 0.45, ease: "expo.out" },
       )
+      .set(outline, { autoAlpha: 0 })
       .from(label, { yPercent: 110, duration: 0.8, ease: "hop" }, "-=0.3")
       .from(shadow, { x: 0, y: 0, opacity: 0, duration: 0.4, ease: "power3.out" });
 
+    const untrack = trackIntro(intro);
+
     return () => {
+      untrack();
       observer.disconnect();
       hover.kill();
       intro.scrollTrigger?.kill();
@@ -93,12 +96,18 @@
   const hide = () => ready && hover.reverse();
 
   const press = () =>
-    ready && gsap.to(shadow, { x: 0, y: 0, duration: 0.08, ease: "power2.out" });
+    ready && gsap.to([fill, mask], { x: 2, y: 2, skewX: 0, duration: 0.08, ease: "power2.out" });
 
   const release = () => {
     if (!ready) return;
-    const offset = hover.progress() > 0 && !hover.reversed() ? SHADOW + LIFT : SHADOW;
-    gsap.to(shadow, { x: offset, y: offset, duration: 0.3, ease: "back.out(3)" });
+    const hovered = hover.progress() > 0 && !hover.reversed();
+    gsap.to([fill, mask], {
+      x: hovered ? -LIFT : 0,
+      y: hovered ? -LIFT : 0,
+      skewX: hovered ? -5 : 0,
+      duration: 0.3,
+      ease: "back.out(3)",
+    });
   };
 
   /** @param {MouseEvent} event */
@@ -136,12 +145,13 @@
 </button>
 
 <style>
-  /* no transform or z-index on the button itself, or the shadow lands on top */
+  /* no transform or z-index on the button itself, or the shadow lands on top;
+     the outline lives on .fill so the face can lean off the shadow */
   button {
     position: relative;
     height: 4rem;
     padding: 0 1.5rem;
-    border: 3px solid var(--ink);
+    border: 3px solid transparent;
     border-radius: 0;
     background: none;
     color: var(--cream);
@@ -150,12 +160,8 @@
     font-weight: 800;
     cursor: pointer;
 
-    &.reveal:not(.drawn) {
-      border-color: transparent;
-
-      .fill {
-        transform: scaleX(0);
-      }
+    &.reveal:not(.drawn) .fill {
+      transform: scaleX(0);
     }
   }
 
@@ -198,7 +204,9 @@
   }
 
   .fill {
-    inset: 0;
+    inset: -3px;
+    box-sizing: border-box;
+    border: 3px solid var(--ink);
     background-color: var(--red);
     transform-origin: left center;
   }

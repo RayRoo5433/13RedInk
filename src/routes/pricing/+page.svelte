@@ -3,7 +3,7 @@
   import Card from "$lib/Card.svelte";
   import Heading from "$lib/Heading.svelte";
   import Paragraph from "$lib/Paragraph.svelte";
-  import { gsap } from "$lib/gsap";
+  import { gsap, trackIntro } from "$lib/gsap";
   import { slamIn, tilt } from "$lib/p5";
 
   const plans = [
@@ -26,7 +26,10 @@
         0.4,
       );
 
+    const untrack = trackIntro(tl);
+
     return () => {
+      untrack();
       tl.scrollTrigger?.kill();
       tl.kill();
     };

@@ -3,7 +3,7 @@
   import moment from "moment";
   import Card from "./Card.svelte";
   import Rating from "./Rating.svelte";
-  import { gsap, reducedMotion } from "$lib/gsap";
+  import { gsap, reducedMotion, trackIntro } from "$lib/gsap";
   import { dropIn, primeDrop, tilt } from "$lib/p5";
 
   const SPEED = 50;
@@ -116,7 +116,10 @@
       .from(band, { height: 0, duration: 0.8, ease: "power3.inOut", clearProps: "height" })
       .add(dropIn(visible), "-=0.15");
 
+    const untrack = trackIntro(intro);
+
     return () => {
+      untrack();
       intro.kill();
       marquee.kill();
       observer.disconnect();

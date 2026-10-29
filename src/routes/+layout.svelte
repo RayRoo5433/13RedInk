@@ -2,8 +2,8 @@
   import "../app.css";
   import Button from "$lib/Button.svelte";
   import { page } from "$app/state";
-  import { afterNavigate } from "$app/navigation";
-  import { gsap, ScrollTrigger, reducedMotion } from "$lib/gsap";
+  import { afterNavigate, onNavigate } from "$app/navigation";
+  import { gsap, ScrollTrigger, reducedMotion, reverseIntros } from "$lib/gsap";
   import { onMount } from "svelte";
 
   let { children } = $props();
@@ -41,6 +41,9 @@
   let pillOn = $state(false);
   let menuOpen = $state(false);
 
+  /** @type {HTMLElement} */
+  let content;
+
   onMount(() => {
     gsap.from(rule, {
       scaleX: 0,
@@ -69,8 +72,14 @@
     return () => observer.disconnect();
   });
 
-  afterNavigate(() => {
+  onNavigate(({ from, to }) => {
+    if (reducedMotion() || from?.url.pathname === to?.url.pathname) return;
+    return reverseIntros();
+  });
+
+  afterNavigate(({ type }) => {
     menuOpen = false;
+    if (type !== "popstate") content.scrollTop = 0;
     ScrollTrigger.refresh();
   });
 
@@ -179,7 +188,7 @@
   </div>
 </header>
 
-<content>
+<content bind:this={content}>
   {@render children()}
 </content>
 
